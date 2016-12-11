@@ -9,7 +9,7 @@ import (
 type Machine interface {
 	Clearable
 
-	Run(program *Program) error
+	Run(program *Program, args []interface{}) (interface{}, error)
 
 	Extend(mnemonic Mnemonic, process Process) error
 }
@@ -22,7 +22,7 @@ func NewMachine() Machine {
 type machine struct {
 	processor processor
 
-	program *Program `json:"program,omitempty"`
+	program *Program `json:"program"`
 	pc      *address `json:"pc"`
 
 	heap  *heap  `json:"heap"`
@@ -41,22 +41,27 @@ func newMachine() *machine {
 	return m
 }
 
-func (m *machine) Run(program *Program) error {
-	if err := m.load(program); err != nil {
-		return err
+func (m *machine) Run(program *Program, args []interface{}) (interface{}, error) {
+	if err := m.load(program, args); err != nil {
+		return nil, err
 	}
 
 	for m.inProgress() {
 		if err := m.step(); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+
+	return getResult(m.context), nil
 }
 
-func (m *machine) load(program *Program) error {
+func (m *machine) load(program *Program, args []interface{}) error {
 	if program == nil {
 		return errors.New("no program")
+	}
+
+	if args == nil {
+		args = []interface{}{}
 	}
 
 	// TODO: Inspect program
@@ -65,19 +70,20 @@ func (m *machine) load(program *Program) error {
 	m.program = program
 
 	frame := NewFrame()
-	frame.Return.Address.Jump(len(program.Instructions))
+	frame.Arguments = args
+	frame.ReturnTo.SetValue(len(program.Instructions))
 	m.stack.Push(frame)
 	return nil
 }
 
 func (m *machine) inProgress() bool {
-	pc := m.pc.Value()
+	pc := m.pc.GetValue()
 	return pc >= 0 && pc < len(m.program.Instructions)
 }
 
 func (m *machine) step() error {
-	inst := &m.program.Instructions[m.pc.Value()]
-	return m.processor[inst.Mnemonic](m.context, inst.Operands)
+	inst := &m.program.Instructions[m.pc.GetValue()]
+	return m.processor[inst.Mnemonic](m.context, inst.Immediates)
 }
 
 func (m *machine) Extend(mnemonic Mnemonic, process Process) error {

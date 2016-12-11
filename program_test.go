@@ -12,11 +12,11 @@ func TestProgram(t *testing.T) {
 
 	p := Program{
 		[]Instruction{
-			{Mnemonic: MnemonicPush, Operands: []interface{}{3.0}},
+			{Mnemonic: MnemonicPush, Immediates: []interface{}{3.0}},
 			{Mnemonic: MnemonicPop},
 		},
 	}
-	s := "{\"program\":[{\"mnemonic\":\"PUSH\",\"operands\":[3]},{\"mnemonic\":\"POP\"}]}"
+	s := "{\"program\":[{\"mnemonic\":\"PUSH\",\"immediates\":[3]},{\"mnemonic\":\"POP\"}]}"
 
 	j, err := json.Marshal(p)
 	assert.NoError(err)

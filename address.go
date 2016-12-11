@@ -4,14 +4,14 @@ package jsm
 type Address interface {
 	Clearable
 
-	// Value returns the current address value.
-	Value() int
+	// GetValue returns the current address value.
+	GetValue() int
 
-	// Increment increments the address.
+	// SetValue sets the address to the given value.
+	SetValue(addr int)
+
+	// Increment increments the address value.
 	Increment()
-
-	// Jump adds the given difference to the address.
-	Jump(diff int)
 }
 
 // NewAddress creates a new Address.
@@ -26,16 +26,16 @@ func newAddress() *address {
 	return &addr
 }
 
-func (a *address) Value() int {
+func (a *address) GetValue() int {
 	return int(*a)
+}
+
+func (a *address) SetValue(addr int) {
+	*a = address(addr)
 }
 
 func (a *address) Increment() {
 	*a++
-}
-
-func (a *address) Jump(diff int) {
-	*a += address(diff)
 }
 
 func (a *address) Clear() {
