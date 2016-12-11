@@ -2,14 +2,16 @@ package jsm
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 )
 
 // Machine is a JSM.
 type Machine interface {
 	Clearable
+	Restorable
 
-	Run(program *Program, args []interface{}) (interface{}, error)
+	Run(program []Instruction, args []interface{}) (interface{}, error)
 
 	Extend(mnemonic Mnemonic, process Process) error
 }
@@ -22,11 +24,10 @@ func NewMachine() Machine {
 type machine struct {
 	processor processor
 
-	program *Program `json:"program"`
-	pc      *address `json:"pc"`
-
-	heap  *heap  `json:"heap"`
-	stack *stack `json:"stack"`
+	Program []Instruction `json:"program"`
+	PC      *address      `json:"pc"`
+	Heap    *heap         `json:"heap"`
+	Stack   *stack        `json:"stack"`
 
 	context context.Context
 }
@@ -34,14 +35,14 @@ type machine struct {
 func newMachine() *machine {
 	m := new(machine)
 	m.processor = newProcessor()
-	m.pc = newAddress()
-	m.heap = newHeap()
-	m.stack = newStack()
+	m.PC = newAddress()
+	m.Heap = newHeap()
+	m.Stack = newStack()
 	m.context = newContext(m)
 	return m
 }
 
-func (m *machine) Run(program *Program, args []interface{}) (interface{}, error) {
+func (m *machine) Run(program []Instruction, args []interface{}) (interface{}, error) {
 	if err := m.load(program, args); err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func (m *machine) Run(program *Program, args []interface{}) (interface{}, error)
 	return getResult(m.context), nil
 }
 
-func (m *machine) load(program *Program, args []interface{}) error {
+func (m *machine) load(program []Instruction, args []interface{}) error {
 	if program == nil {
 		return errors.New("no program")
 	}
@@ -67,22 +68,22 @@ func (m *machine) load(program *Program, args []interface{}) error {
 	// TODO: Inspect program
 
 	m.Clear()
-	m.program = program
+	m.Program = program
 
 	frame := NewFrame()
 	frame.Arguments = args
-	frame.ReturnTo.SetValue(len(program.Instructions))
-	m.stack.Push(frame)
+	frame.ReturnTo.SetValue(len(program))
+	m.Stack.Push(frame)
 	return nil
 }
 
 func (m *machine) inProgress() bool {
-	pc := m.pc.GetValue()
-	return pc >= 0 && pc < len(m.program.Instructions)
+	pc := m.PC.GetValue()
+	return pc >= 0 && pc < len(m.Program)
 }
 
 func (m *machine) step() error {
-	inst := &m.program.Instructions[m.pc.GetValue()]
+	inst := &m.Program[m.PC.GetValue()]
 	return m.processor[inst.Mnemonic](m.context, inst.Immediates)
 }
 
@@ -91,8 +92,16 @@ func (m *machine) Extend(mnemonic Mnemonic, process Process) error {
 }
 
 func (m *machine) Clear() {
-	m.program = nil
-	m.pc.Clear()
-	m.heap.Clear()
-	m.stack.Clear()
+	m.Program = nil
+	m.PC.Clear()
+	m.Heap.Clear()
+	m.Stack.Clear()
+}
+
+func (m *machine) Dump() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+func (m *machine) Restore(data []byte) error {
+	return json.Unmarshal(data, m)
 }

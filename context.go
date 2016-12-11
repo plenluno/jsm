@@ -13,9 +13,9 @@ const (
 
 func newContext(m *machine) context.Context {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, keyPC, Address(m.pc))
-	ctx = context.WithValue(ctx, keyHeap, Heap(m.heap))
-	ctx = context.WithValue(ctx, keyStack, Stack(m.stack))
+	ctx = context.WithValue(ctx, keyPC, Address(m.PC))
+	ctx = context.WithValue(ctx, keyHeap, Heap(m.Heap))
+	ctx = context.WithValue(ctx, keyStack, Stack(m.Stack))
 	ctx = context.WithValue(ctx, keyResult, new(interface{}))
 	return ctx
 }

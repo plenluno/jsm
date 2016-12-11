@@ -1,10 +1,5 @@
 package jsm
 
-// Program is a program to run on JSM.
-type Program struct {
-	Instructions []Instruction `json:"program"`
-}
-
 // Instruction is a instruction for JSM.
 type Instruction struct {
 	Label      string        `json:"label,omitempty"`
