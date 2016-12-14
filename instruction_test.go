@@ -14,7 +14,7 @@ func TestInstruction(t *testing.T) {
 		{Mnemonic: MnemonicPush, Immediates: []interface{}{3.0}},
 		{Mnemonic: MnemonicPop},
 	}
-	s := "[{\"mnemonic\":\"PUSH\",\"immediates\":[3]},{\"mnemonic\":\"POP\"}]"
+	s := "[{\"mnemonic\":\"push\",\"immediates\":[3]},{\"mnemonic\":\"pop\"}]"
 
 	j, err := json.Marshal(p)
 	assert.NoError(err)
