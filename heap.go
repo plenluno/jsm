@@ -2,7 +2,8 @@ package jsm
 
 import (
 	"encoding/json"
-	"errors"
+
+	"github.com/pkg/errors"
 )
 
 // Heap is the heap of a JSM.
@@ -42,9 +43,10 @@ func (h *heap) Clear() {
 }
 
 func (h *heap) Dump() ([]byte, error) {
-	return json.Marshal(h)
+	data, err := json.Marshal(h)
+	return data, errors.Wrap(err, "failed to dump heap")
 }
 
 func (h *heap) Restore(data []byte) error {
-	return json.Unmarshal(data, h)
+	return errors.Wrap(json.Unmarshal(data, h), "failed to restore heap")
 }

@@ -2,8 +2,8 @@ package jsm
 
 import (
 	"context"
-	"errors"
-	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // Process executes an operation on JSM.
@@ -30,7 +30,7 @@ func (p processor) extend(mnemonic Mnemonic, process Process) error {
 	}
 
 	if _, ok := p[mnemonic]; ok {
-		return fmt.Errorf("mnemonic already defined: %s", mnemonic)
+		return errors.Errorf("mnemonic already defined: %s", mnemonic)
 	}
 
 	p[mnemonic] = process

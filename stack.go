@@ -2,7 +2,8 @@ package jsm
 
 import (
 	"encoding/json"
-	"errors"
+
+	"github.com/pkg/errors"
 )
 
 // Stack is the stack of a JSM.
@@ -55,9 +56,10 @@ func (s *stack) Clear() {
 }
 
 func (s *stack) Dump() ([]byte, error) {
-	return json.Marshal(s)
+	data, err := json.Marshal(s)
+	return data, errors.Wrap(err, "failed to dump stack")
 }
 
 func (s *stack) Restore(data []byte) error {
-	return json.Unmarshal(data, s)
+	return errors.Wrap(json.Unmarshal(data, s), "failed to restore stack")
 }

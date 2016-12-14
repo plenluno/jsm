@@ -3,7 +3,8 @@ package jsm
 import (
 	"context"
 	"encoding/json"
-	"errors"
+
+	"github.com/pkg/errors"
 )
 
 // Machine is a JSM.
@@ -99,9 +100,10 @@ func (m *machine) Clear() {
 }
 
 func (m *machine) Dump() ([]byte, error) {
-	return json.Marshal(m)
+	data, err := json.Marshal(m)
+	return data, errors.Wrap(err, "failed to dump machine")
 }
 
 func (m *machine) Restore(data []byte) error {
-	return json.Unmarshal(data, m)
+	return errors.Wrap(json.Unmarshal(data, m), "failed to restore machine")
 }
