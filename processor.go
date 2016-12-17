@@ -2,6 +2,7 @@ package jsm
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/pkg/errors"
 )
@@ -17,6 +18,9 @@ func newProcessor() processor {
 	p[MnemonicPop] = pop
 	p[MnemonicCall] = call
 	p[MnemonicReturn] = ret
+	p[MnemonicJump] = jmp
+	p[MnemonicJumpIfTrue] = jt
+	p[MnemonicJumpIfFalse] = jf
 	return p
 }
 
@@ -37,6 +41,32 @@ func (p processor) extend(mnemonic Mnemonic, process Process) error {
 	return nil
 }
 
+func isTrue(v interface{}) bool {
+	return !isFalse(v)
+}
+
+func isFalse(v interface{}) bool {
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Invalid:
+		return true
+	case reflect.Bool:
+		return val.Bool() == false
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return val.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return val.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return val.Float() == 0.0
+	case reflect.String:
+		return val.String() == ""
+	case reflect.Ptr, reflect.Map, reflect.Slice:
+		return val.IsNil()
+	default:
+		return false
+	}
+}
+
 func popOperands(frame *Frame, n int) ([]interface{}, error) {
 	operands := make([]interface{}, n)
 	for i := 0; i < n; i++ {
@@ -48,6 +78,19 @@ func popOperands(frame *Frame, n int) ([]interface{}, error) {
 		operands[i] = v
 	}
 	return operands, nil
+}
+
+func getAddress(vs []interface{}, idx int) (int, error) {
+	if len(vs) > idx {
+		return -1, errors.New("no address")
+	}
+
+	addr, ok := vs[idx].(int)
+	if !ok {
+		return -1, errors.New("invalid address")
+	}
+
+	return addr, nil
 }
 
 func push(ctx context.Context, immediates []interface{}) error {
@@ -88,17 +131,14 @@ func pop(ctx context.Context, immediates []interface{}) error {
 }
 
 func call(ctx context.Context, immediates []interface{}) error {
-	if len(immediates) == 0 {
-		return errors.New("no address")
-	}
-
-	addr, ok := immediates[0].(int)
-	if !ok {
-		return errors.New("invalid address")
+	addr, err := getAddress(immediates, 0)
+	if err != nil {
+		return err
 	}
 
 	argc := 0
 	if len(immediates) > 1 {
+		var ok bool
 		argc, ok = immediates[1].(int)
 		if !ok || argc < 0 {
 			return errors.New("invalid argument count")
@@ -162,6 +202,64 @@ func ret(ctx context.Context, immediates []interface{}) error {
 
 	for _, v := range retVals {
 		frame.Operands.Push(v)
+	}
+	return nil
+}
+
+func jmp(ctx context.Context, immediates []interface{}) error {
+	addr, err := getAddress(immediates, 0)
+	if err != nil {
+		return err
+	}
+
+	GetPC(ctx).SetValue(addr)
+	return nil
+}
+
+func jt(ctx context.Context, immediates []interface{}) error {
+	addr, err := getAddress(immediates, 0)
+	if err != nil {
+		return err
+	}
+
+	frame := GetFrame(ctx)
+	if frame == nil {
+		return errors.New("no frame")
+	}
+
+	v, err := frame.Operands.Pop()
+	if err != nil {
+		return err
+	}
+
+	if isTrue(v) {
+		GetPC(ctx).SetValue(addr)
+	} else {
+		GetPC(ctx).Increment()
+	}
+	return nil
+}
+
+func jf(ctx context.Context, immediates []interface{}) error {
+	addr, err := getAddress(immediates, 0)
+	if err != nil {
+		return err
+	}
+
+	frame := GetFrame(ctx)
+	if frame == nil {
+		return errors.New("no frame")
+	}
+
+	v, err := frame.Operands.Pop()
+	if err != nil {
+		return err
+	}
+
+	if isFalse(v) {
+		GetPC(ctx).SetValue(addr)
+	} else {
+		GetPC(ctx).Increment()
 	}
 	return nil
 }
