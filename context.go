@@ -1,6 +1,10 @@
 package jsm
 
-import "context"
+import (
+	"context"
+
+	"github.com/pkg/errors"
+)
 
 type contextKey int
 
@@ -36,13 +40,13 @@ func GetStack(ctx context.Context) Stack {
 }
 
 // GetFrame retrieves the current Frame from Context.
-func GetFrame(ctx context.Context) *Frame {
+func GetFrame(ctx context.Context) (*Frame, error) {
 	stack := GetStack(ctx)
 	f, err := stack.Peek()
 	if err != nil {
-		return nil
+		return nil, errors.New("no frame")
 	}
-	return f.(*Frame)
+	return f.(*Frame), nil
 }
 
 func getResult(ctx context.Context) interface{} {

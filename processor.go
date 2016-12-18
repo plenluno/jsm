@@ -2,12 +2,11 @@ package jsm
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/pkg/errors"
 )
 
-// Process executes an operation on JSM.
+// Process executes operations on JSM.
 type Process func(ctx context.Context, immediates []interface{}) error
 
 type processor map[Mnemonic]Process
@@ -41,66 +40,92 @@ func (p processor) extend(mnemonic Mnemonic, process Process) error {
 	return nil
 }
 
-func isTrue(v interface{}) bool {
-	return !isFalse(v)
-}
-
-func isFalse(v interface{}) bool {
-	val := reflect.ValueOf(v)
-	switch val.Kind() {
-	case reflect.Invalid:
-		return true
-	case reflect.Bool:
-		return val.Bool() == false
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return val.Int() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return val.Uint() == 0
-	case reflect.Float32, reflect.Float64:
-		return val.Float() == 0.0
-	case reflect.String:
-		return val.String() == ""
-	case reflect.Ptr, reflect.Map, reflect.Slice:
-		return val.IsNil()
-	default:
-		return false
+// Push pushes a value onto the operand stack.
+func Push(ctx context.Context, v interface{}) error {
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return err
 	}
+
+	frame.Operands.Push(v)
+	return nil
 }
 
-func popOperands(frame *Frame, n int) ([]interface{}, error) {
+// MultiPush pushes multiple values onto the operand stack.
+func MultiPush(ctx context.Context, vs []interface{}) error {
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range vs {
+		frame.Operands.Push(v)
+	}
+	return nil
+}
+
+// Pop pops a value from the operand stack.
+func Pop(ctx context.Context) (interface{}, error) {
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := frame.Operands.Pop()
+	if err != nil {
+		return nil, errors.New("no operand")
+	}
+	return v, nil
+}
+
+// MultiPop pops multiple values from the operand stack.
+func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	operands := make([]interface{}, n)
 	for i := 0; i < n; i++ {
 		v, err := frame.Operands.Pop()
 		if err != nil {
-			return nil, err
+			return nil, errors.New("no operand")
 		}
 
-		operands[i] = v
+		operands[n-i-1] = v
 	}
 	return operands, nil
 }
 
 func getAddress(vs []interface{}, idx int) (int, error) {
-	if len(vs) > idx {
+	if len(vs) <= idx {
 		return -1, errors.New("no address")
 	}
 
 	addr, ok := vs[idx].(int)
-	if !ok {
+	if !ok || addr < 0 {
 		return -1, errors.New("invalid address")
 	}
 
 	return addr, nil
 }
 
-func push(ctx context.Context, immediates []interface{}) error {
-	frame := GetFrame(ctx)
-	if frame == nil {
-		return errors.New("no frame")
+func getCount(vs []interface{}, idx, min int) (int, error) {
+	if len(vs) <= idx {
+		return min, nil
 	}
 
-	for _, imm := range immediates {
-		frame.Operands.Push(imm)
+	count, ok := vs[idx].(int)
+	if !ok || count < min {
+		return -1, errors.New("invalid count")
+	}
+
+	return count, nil
+}
+
+func push(ctx context.Context, immediates []interface{}) error {
+	if err := MultiPush(ctx, immediates); err != nil {
+		return err
 	}
 
 	GetPC(ctx).Increment()
@@ -108,21 +133,12 @@ func push(ctx context.Context, immediates []interface{}) error {
 }
 
 func pop(ctx context.Context, immediates []interface{}) error {
-	n := 1
-	if len(immediates) > 0 {
-		var ok bool
-		n, ok = immediates[0].(int)
-		if !ok || n < 1 {
-			return errors.New("invalid pop count")
-		}
+	n, err := getCount(immediates, 0, 1)
+	if err != nil {
+		return err
 	}
 
-	frame := GetFrame(ctx)
-	if frame == nil {
-		return errors.New("no frame")
-	}
-
-	if _, err := popOperands(frame, n); err != nil {
+	if _, err := MultiPop(ctx, n); err != nil {
 		return err
 	}
 
@@ -136,21 +152,12 @@ func call(ctx context.Context, immediates []interface{}) error {
 		return err
 	}
 
-	argc := 0
-	if len(immediates) > 1 {
-		var ok bool
-		argc, ok = immediates[1].(int)
-		if !ok || argc < 0 {
-			return errors.New("invalid argument count")
-		}
+	argc, err := getCount(immediates, 1, 0)
+	if err != nil {
+		return err
 	}
 
-	frame := GetFrame(ctx)
-	if frame == nil {
-		return errors.New("no frame")
-	}
-
-	argv, err := popOperands(frame, argc)
+	argv, err := MultiPop(ctx, argc)
 	if err != nil {
 		return nil
 	}
@@ -158,7 +165,7 @@ func call(ctx context.Context, immediates []interface{}) error {
 	pc := GetPC(ctx)
 	pc.Increment()
 
-	frame = NewFrame()
+	frame := NewFrame()
 	frame.Arguments = argv
 	frame.ReturnTo.SetValue(pc.GetValue())
 	GetStack(ctx).Push(frame)
@@ -168,40 +175,29 @@ func call(ctx context.Context, immediates []interface{}) error {
 }
 
 func ret(ctx context.Context, immediates []interface{}) error {
-	n := 0
-	if len(immediates) > 0 {
-		var ok bool
-		n, ok = immediates[0].(int)
-		if !ok || n < 0 {
-			return errors.New("invalid return value count")
-		}
-	}
-
-	v, err := GetStack(ctx).Pop()
+	n, err := getCount(immediates, 0, 0)
 	if err != nil {
 		return err
 	}
 
-	frame, ok := v.(*Frame)
-	if !ok {
-		return errors.New("invalid frame")
+	res, err := MultiPop(ctx, n)
+	if err != nil {
+		return err
+	}
+
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return err
 	}
 
 	GetPC(ctx).SetValue(frame.ReturnTo.GetValue())
-
-	retVals, err := popOperands(frame, n)
+	_, err = GetStack(ctx).Pop()
 	if err != nil {
 		return err
 	}
 
-	frame = GetFrame(ctx)
-	if frame == nil {
-		setResult(ctx, retVals)
-		return nil
-	}
-
-	for _, v := range retVals {
-		frame.Operands.Push(v)
+	if err := MultiPush(ctx, res); err != nil {
+		setResult(ctx, res)
 	}
 	return nil
 }
@@ -222,17 +218,12 @@ func jt(ctx context.Context, immediates []interface{}) error {
 		return err
 	}
 
-	frame := GetFrame(ctx)
-	if frame == nil {
-		return errors.New("no frame")
-	}
-
-	v, err := frame.Operands.Pop()
+	v, err := Pop(ctx)
 	if err != nil {
 		return err
 	}
 
-	if isTrue(v) {
+	if ToBool(v) {
 		GetPC(ctx).SetValue(addr)
 	} else {
 		GetPC(ctx).Increment()
@@ -246,17 +237,12 @@ func jf(ctx context.Context, immediates []interface{}) error {
 		return err
 	}
 
-	frame := GetFrame(ctx)
-	if frame == nil {
-		return errors.New("no frame")
-	}
-
-	v, err := frame.Operands.Pop()
+	v, err := Pop(ctx)
 	if err != nil {
 		return err
 	}
 
-	if isFalse(v) {
+	if !ToBool(v) {
 		GetPC(ctx).SetValue(addr)
 	} else {
 		GetPC(ctx).Increment()
