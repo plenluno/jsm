@@ -47,6 +47,19 @@ func TestToBool(t *testing.T) {
 	assert.True(ToBool(sl))
 }
 
+func TestToString(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal("null", ToString(nil))
+	assert.Equal("null", ToString([]int(nil)))
+	assert.Equal("false", ToString(false))
+	assert.Equal("-1", ToString(-1))
+	assert.Equal("1", ToString(1.0))
+	assert.Equal("a", ToString("a"))
+	assert.Equal("1,2", ToString([]interface{}{1.0, 2.0}))
+	assert.Equal("{\"1\":2}", ToString(map[float64]int{1.0: 2}))
+}
+
 func TestEqual(t *testing.T) {
 	assert := assert.New(t)
 

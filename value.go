@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"reflect"
+	"strings"
 )
 
 // ToBool converts the given value to a boolean value.
@@ -32,11 +33,23 @@ func ToBool(v interface{}) bool {
 
 // ToString converts the given value to a string value.
 func ToString(v interface{}) string {
-	switch v.(type) {
-	case string:
-		return v.(string)
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.String:
+		return val.String()
+	case reflect.Slice:
+		if val.IsNil() {
+			return "null"
+		}
+
+		n := val.Len()
+		ss := make([]string, n)
+		for i := 0; i < n; i++ {
+			ss[i] = ToString(val.Index(i).Interface())
+		}
+		return strings.Join(ss, ",")
 	default:
-		data, err := json.Marshal(v)
+		data, err := json.Marshal(normalize(v))
 		if err != nil {
 			panic(err)
 		}
