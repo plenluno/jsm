@@ -12,14 +12,21 @@ type Process func(ctx context.Context, immediates []interface{}) error
 type processor map[Mnemonic]Process
 
 func newProcessor() processor {
-	p := processor{}
-	p[MnemonicPush] = push
-	p[MnemonicPop] = pop
-	p[MnemonicCall] = call
-	p[MnemonicReturn] = ret
-	p[MnemonicJump] = jmp
-	p[MnemonicJumpIfTrue] = jt
-	p[MnemonicJumpIfFalse] = jf
+	p := processor{
+		MnemonicPush:           push,
+		MnemonicPop:            pop,
+		MnemonicCall:           call,
+		MnemonicReturn:         ret,
+		MnemonicJump:           jmp,
+		MnemonicJumpIfTrue:     jt,
+		MnemonicJumpIfFalse:    jf,
+		MnemonicEqual:          eq,
+		MnemonicNotEqual:       ne,
+		MnemonicGreaterThan:    gt,
+		MnemonicGreaterOrEqual: ge,
+		MnemonicLessThan:       lt,
+		MnemonicLessOrEqual:    le,
+	}
 	return p
 }
 
@@ -247,5 +254,89 @@ func jf(ctx context.Context, immediates []interface{}) error {
 	} else {
 		GetPC(ctx).Increment()
 	}
+	return nil
+}
+
+func eq(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, Equal(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func ne(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, !Equal(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func gt(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, Less(vs[1], vs[0])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func ge(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, Less(vs[1], vs[0]) || Equal(vs[1], vs[0])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func lt(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, Less(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func le(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, Less(vs[0], vs[1]) || Equal(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
 	return nil
 }

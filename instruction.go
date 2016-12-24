@@ -13,11 +13,17 @@ type Mnemonic string
 
 // These constants are instruction mnemonics.
 const (
-	MnemonicPush        Mnemonic = "push"
-	MnemonicPop                  = "pop"
-	MnemonicCall                 = "call"
-	MnemonicReturn               = "ret"
-	MnemonicJump                 = "jmp"
-	MnemonicJumpIfTrue           = "jt"
-	MnemonicJumpIfFalse          = "jf"
+	MnemonicPush           Mnemonic = "push"
+	MnemonicPop                     = "pop"
+	MnemonicCall                    = "call"
+	MnemonicReturn                  = "ret"
+	MnemonicJump                    = "jmp"
+	MnemonicJumpIfTrue              = "jt"
+	MnemonicJumpIfFalse             = "jf"
+	MnemonicEqual                   = "eq"
+	MnemonicNotEqual                = "ne"
+	MnemonicGreaterThan             = "gt"
+	MnemonicGreaterOrEqual          = "ge"
+	MnemonicLessThan                = "lt"
+	MnemonicLessOrEqual             = "le"
 )
