@@ -46,3 +46,24 @@ func TestToBool(t *testing.T) {
 	assert.True(ToBool(m))
 	assert.True(ToBool(sl))
 }
+
+func TestEqual(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.True(Equal(nil, []int(nil)))
+	assert.True(Equal(false, false))
+	assert.True(Equal(0, 0.0))
+	assert.True(Equal(int(1), uint(1)))
+	assert.True(Equal(9007199254740991, 9007199254740991.0))
+	assert.True(Equal("a", "a"))
+	assert.True(Equal([]int{1, 2}, []interface{}{1.0, 2.0}))
+	assert.True(Equal(map[float64]int{1.0: 2}, map[string]float64{"1": 2.0}))
+
+	assert.False(Equal(nil, false))
+	assert.False(Equal(true, false))
+	assert.False(Equal(0, 1))
+	assert.False(Equal(9007199254740992, 9007199254740992.0))
+	assert.False(Equal("a", "b"))
+	assert.False(Equal([]int{1, 2}, []interface{}{1, "a"}))
+	assert.False(Equal(map[float64]int{1.0: 2}, map[string]float64{"1": 2.2}))
+}
