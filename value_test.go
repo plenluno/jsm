@@ -47,6 +47,19 @@ func TestToBool(t *testing.T) {
 	assert.True(ToBool(sl))
 }
 
+func TestToNumber(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal(0.0, ToNumber(nil))
+	assert.Equal(0.0, ToNumber([]int(nil)))
+	assert.Equal(0.0, ToNumber(false))
+	assert.Equal(1.0, ToNumber(true))
+	assert.Equal(1.0, ToNumber(1))
+	assert.Equal(1.1, ToNumber(1.1))
+	assert.Equal(1.1, ToNumber("1.1"))
+	assert.True(math.IsNaN(ToNumber("")))
+}
+
 func TestToString(t *testing.T) {
 	assert := assert.New(t)
 

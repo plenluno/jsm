@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -28,6 +29,39 @@ func ToBool(v interface{}) bool {
 		return !val.IsNil()
 	default:
 		return true
+	}
+}
+
+// ToNumber converts the given value to a floating point number.
+func ToNumber(v interface{}) float64 {
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Invalid:
+		return 0.0
+	case reflect.Bool:
+		if val.Bool() {
+			return 1.0
+		}
+		return 0.0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return float64(val.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return float64(val.Uint())
+	case reflect.Float32, reflect.Float64:
+		return val.Float()
+	case reflect.String:
+		f, err := strconv.ParseFloat(val.String(), 64)
+		if err != nil {
+			return math.NaN()
+		}
+		return f
+	case reflect.Slice, reflect.Map, reflect.Ptr:
+		if val.IsNil() {
+			return 0.0
+		}
+		return math.NaN()
+	default:
+		return math.NaN()
 	}
 }
 
