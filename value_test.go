@@ -80,3 +80,31 @@ func TestEqual(t *testing.T) {
 	assert.False(Equal([]int{1, 2}, []interface{}{1, "a"}))
 	assert.False(Equal(map[float64]int{1.0: 2}, map[string]float64{"1": 2.2}))
 }
+
+func TestLess(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.True(Less(false, true))
+	assert.True(Less(1.0, 1.1))
+	assert.True(Less(9007199254740991, 9007199254740992))
+	assert.True(Less(9007199254740992, 9007199254740993))
+	assert.True(Less(-9007199254740992, -9007199254740991))
+	assert.True(Less(-9007199254740993, -9007199254740992))
+	assert.True(Less(-9007199254740993, 9007199254740993))
+	assert.True(Less("a", "b"))
+
+	assert.False(Less(nil, false))
+	assert.False(Less(false, nil))
+	assert.False(Less(true, false))
+	assert.False(Less(false, false))
+	assert.False(Less(1.1, 1.0))
+	assert.False(Less(1.1, 1.1))
+	assert.False(Less(9007199254740992, 9007199254740991))
+	assert.False(Less(9007199254740993, 9007199254740992))
+	assert.False(Less(-9007199254740991, -9007199254740992))
+	assert.False(Less(-9007199254740992, -9007199254740993))
+	assert.False(Less(9007199254740993, -9007199254740993))
+	assert.False(Less(9007199254740993, 9007199254740993.0))
+	assert.False(Less("b", "a"))
+	assert.False(Less("b", "b"))
+}

@@ -62,6 +62,63 @@ func Equal(v1, v2 interface{}) bool {
 	return reflect.DeepEqual(normalize(v1), normalize(v2))
 }
 
+// Less checks if v1 is less than v2.
+func Less(v1, v2 interface{}) bool {
+	val1 := reflect.ValueOf(normalize(v1))
+	val2 := reflect.ValueOf(normalize(v2))
+	kind1 := val1.Kind()
+	kind2 := val2.Kind()
+	switch kind1 {
+	case reflect.Bool:
+		if kind2 == reflect.Bool {
+			return !val1.Bool() && val2.Bool()
+		}
+		return false
+	case reflect.Int64:
+		switch kind2 {
+		case reflect.Int64:
+			return val1.Int() < val2.Int()
+		case reflect.Uint64:
+			// val1 < 0 && val2 >= 0
+			return true
+		case reflect.Float64:
+			return float64(val1.Int()) < val2.Float()
+		default:
+			return false
+		}
+	case reflect.Uint64:
+		switch kind2 {
+		case reflect.Int64:
+			// val1 >= 0 && val2 < 0
+			return false
+		case reflect.Uint64:
+			return val1.Uint() < val2.Uint()
+		case reflect.Float64:
+			return float64(val1.Uint()) < val2.Float()
+		default:
+			return false
+		}
+	case reflect.Float64:
+		switch kind2 {
+		case reflect.Int64:
+			return val1.Float() < float64(val2.Int())
+		case reflect.Uint64:
+			return val1.Float() < float64(val2.Uint())
+		case reflect.Float64:
+			return val1.Float() < val2.Float()
+		default:
+			return false
+		}
+	case reflect.String:
+		if kind2 == reflect.String {
+			return strings.Compare(val1.String(), val2.String()) < 0
+		}
+		return false
+	default:
+		return false
+	}
+}
+
 const maxSafeInteger = 1<<53 - 1
 
 func normalize(v interface{}) interface{} {
