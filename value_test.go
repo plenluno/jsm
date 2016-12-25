@@ -60,6 +60,20 @@ func TestToNumber(t *testing.T) {
 	assert.True(math.IsNaN(ToNumber("")))
 }
 
+func TestToInteger(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal(0, ToInteger(nil))
+	assert.Equal(0, ToInteger([]int(nil)))
+	assert.Equal(0, ToInteger(false))
+	assert.Equal(1, ToInteger(true))
+	assert.Equal(1, ToInteger(1))
+	assert.Equal(1, ToInteger(1.1))
+	assert.Equal(-1, ToInteger(-1.1))
+	assert.Equal(1, ToInteger("1.1"))
+	assert.Equal(0, ToInteger(""))
+}
+
 func TestToString(t *testing.T) {
 	assert := assert.New(t)
 

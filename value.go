@@ -65,6 +65,22 @@ func ToNumber(v interface{}) float64 {
 	}
 }
 
+// ToInteger converts the given value to an integer value.
+func ToInteger(v interface{}) int {
+	f := ToNumber(v)
+	if math.IsNaN(f) {
+		return 0
+	}
+
+	var sign float64
+	if math.Signbit(f) {
+		sign = -1.0
+	} else {
+		sign = 1.0
+	}
+	return int(sign * math.Floor(math.Abs(f)))
+}
+
 // ToString converts the given value to a string value.
 func ToString(v interface{}) string {
 	val := reflect.ValueOf(v)
