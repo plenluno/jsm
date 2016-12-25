@@ -26,6 +26,10 @@ func newProcessor() processor {
 		MnemonicGreaterOrEqual: ge,
 		MnemonicLessThan:       lt,
 		MnemonicLessOrEqual:    le,
+		MnemonicAdd:            add,
+		MnemonicSubtract:       sub,
+		MnemonicMultiply:       mul,
+		MnemonicDivide:         div,
 	}
 	return p
 }
@@ -334,6 +338,68 @@ func le(ctx context.Context, immediates []interface{}) error {
 	}
 
 	if err := Push(ctx, Less(vs[0], vs[1]) || Equal(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func add(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, ToNumber(vs[0])+ToNumber(vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func sub(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, ToNumber(vs[0])-ToNumber(vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func mul(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, ToNumber(vs[0])*ToNumber(vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func div(ctx context.Context, immediates []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	num1 := ToNumber(vs[0])
+	num2 := ToNumber(vs[1])
+	if num2 == 0.0 {
+		return errors.New("divide by zero")
+	}
+
+	if err := Push(ctx, num1/num2); err != nil {
 		return err
 	}
 

@@ -26,4 +26,8 @@ const (
 	MnemonicGreaterOrEqual          = "ge"
 	MnemonicLessThan                = "lt"
 	MnemonicLessOrEqual             = "le"
+	MnemonicAdd                     = "add"
+	MnemonicSubtract                = "sub"
+	MnemonicMultiply                = "mul"
+	MnemonicDivide                  = "div"
 )
