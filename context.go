@@ -6,16 +6,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-type contextKey int
+type machineContextKey int
 
 const (
-	keyPC contextKey = iota
+	keyPC machineContextKey = iota
 	keyHeap
 	keyStack
 	keyResult
 )
 
-func newContext(m *machine) context.Context {
+func newMachineContext(m *machine) context.Context {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, keyPC, Address(m.PC))
 	ctx = context.WithValue(ctx, keyHeap, Heap(m.Heap))
@@ -56,4 +56,21 @@ func getResult(ctx context.Context) interface{} {
 func setResult(ctx context.Context, res interface{}) {
 	r := ctx.Value(keyResult).(*interface{})
 	*r = res
+}
+
+type programContextKey int
+
+const (
+	keyLabels programContextKey = iota
+)
+
+func newProgramContext() context.Context {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, keyLabels, map[string]int{})
+	return ctx
+}
+
+// GetLabels retrieves the program labels from Context.
+func GetLabels(ctx context.Context) map[string]int {
+	return ctx.Value(keyLabels).(map[string]int)
 }

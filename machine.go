@@ -39,7 +39,7 @@ func newMachine() *machine {
 	m.PC = newAddress()
 	m.Heap = newHeap()
 	m.Stack = newStack()
-	m.context = newContext(m)
+	m.context = newMachineContext(m)
 	return m
 }
 
