@@ -15,6 +15,11 @@ type Mnemonic string
 const (
 	MnemonicPush           Mnemonic = "push"
 	MnemonicPop                     = "pop"
+	MnemonicLoad                    = "ld"
+	MnemonicLoadArgument            = "lda"
+	MnemonicLoadLocal               = "ldl"
+	MnemonicStore                   = "st"
+	MnemonicStoreLocal              = "stl"
 	MnemonicCall                    = "call"
 	MnemonicReturn                  = "ret"
 	MnemonicJump                    = "jmp"

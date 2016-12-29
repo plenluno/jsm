@@ -49,6 +49,29 @@ func GetFrame(ctx context.Context) (*Frame, error) {
 	return f.(*Frame), nil
 }
 
+// GetArgument retrieves the argument at the specified position from Context.
+func GetArgument(ctx context.Context, idx int) (interface{}, error) {
+	f, err := GetFrame(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if idx >= len(f.Arguments) {
+		return nil, errors.New("argument out of range")
+	}
+
+	return f.Arguments[idx], nil
+}
+
+// GetLocals retrieves the local variables from Context.
+func GetLocals(ctx context.Context) (Heap, error) {
+	f, err := GetFrame(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return f.Locals, nil
+}
+
 func getResult(ctx context.Context) interface{} {
 	return *ctx.Value(keyResult).(*interface{})
 }

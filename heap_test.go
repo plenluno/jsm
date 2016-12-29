@@ -10,11 +10,12 @@ func TestHeapLoadStore(t *testing.T) {
 	assert := assert.New(t)
 
 	h := NewHeap()
-	_, err := h.Load("abc")
+	v, err := h.Load("abc")
 	assert.Error(err)
+	assert.Nil(v)
 
 	h.Store("abc", 123)
-	v, err := h.Load("abc")
+	v, err = h.Load("abc")
 	assert.NoError(err)
 	assert.Equal(123, v)
 

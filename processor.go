@@ -7,14 +7,19 @@ import (
 )
 
 // Process executes operations on JSM.
-type Process func(ctx context.Context, immediates []interface{}) error
+type Process func(ctx context.Context, imms []interface{}) error
 
 type processor map[Mnemonic]Process
 
 func newProcessor() processor {
-	p := processor{
+	return processor{
 		MnemonicPush:           push,
 		MnemonicPop:            pop,
+		MnemonicLoad:           ld,
+		MnemonicLoadArgument:   lda,
+		MnemonicLoadLocal:      ldl,
+		MnemonicStore:          st,
+		MnemonicStoreLocal:     stl,
 		MnemonicCall:           call,
 		MnemonicReturn:         ret,
 		MnemonicJump:           jmp,
@@ -31,7 +36,6 @@ func newProcessor() processor {
 		MnemonicMultiply:       mul,
 		MnemonicDivide:         div,
 	}
-	return p
 }
 
 func (p processor) extend(mnemonic Mnemonic, process Process) error {
@@ -134,8 +138,8 @@ func getCount(vs []interface{}, idx, min int) (int, error) {
 	return count, nil
 }
 
-func push(ctx context.Context, immediates []interface{}) error {
-	if err := MultiPush(ctx, immediates); err != nil {
+func push(ctx context.Context, imms []interface{}) error {
+	if err := MultiPush(ctx, imms); err != nil {
 		return err
 	}
 
@@ -143,8 +147,8 @@ func push(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func pop(ctx context.Context, immediates []interface{}) error {
-	n, err := getCount(immediates, 0, 1)
+func pop(ctx context.Context, imms []interface{}) error {
+	n, err := getCount(imms, 0, 1)
 	if err != nil {
 		return err
 	}
@@ -157,13 +161,94 @@ func pop(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func call(ctx context.Context, immediates []interface{}) error {
-	addr, err := getAddress(immediates, 0)
+func ld(ctx context.Context, imms []interface{}) error {
+	v, err := Pop(ctx)
 	if err != nil {
 		return err
 	}
 
-	argc, err := getCount(immediates, 1, 0)
+	v, _ = GetHeap(ctx).Load(ToString(v))
+	if err := Push(ctx, v); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func lda(ctx context.Context, imms []interface{}) error {
+	v, err := Pop(ctx)
+	if err != nil {
+		return err
+	}
+
+	a, err := GetArgument(ctx, ToInteger(v))
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, a); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func ldl(ctx context.Context, imms []interface{}) error {
+	v, err := Pop(ctx)
+	if err != nil {
+		return err
+	}
+
+	ls, err := GetLocals(ctx)
+	if err != nil {
+		return err
+	}
+
+	v, _ = ls.Load(ToString(v))
+	if err := Push(ctx, v); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func st(ctx context.Context, imms []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	GetHeap(ctx).Store(ToString(vs[0]), vs[1])
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func stl(ctx context.Context, imms []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	ls, err := GetLocals(ctx)
+	if err != nil {
+		return err
+	}
+
+	ls.Store(ToString(vs[0]), vs[1])
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func call(ctx context.Context, imms []interface{}) error {
+	addr, err := getAddress(imms, 0)
+	if err != nil {
+		return err
+	}
+
+	argc, err := getCount(imms, 1, 0)
 	if err != nil {
 		return err
 	}
@@ -185,8 +270,8 @@ func call(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func ret(ctx context.Context, immediates []interface{}) error {
-	n, err := getCount(immediates, 0, 0)
+func ret(ctx context.Context, imms []interface{}) error {
+	n, err := getCount(imms, 0, 0)
 	if err != nil {
 		return err
 	}
@@ -213,8 +298,8 @@ func ret(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func jmp(ctx context.Context, immediates []interface{}) error {
-	addr, err := getAddress(immediates, 0)
+func jmp(ctx context.Context, imms []interface{}) error {
+	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
 	}
@@ -223,8 +308,8 @@ func jmp(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func jt(ctx context.Context, immediates []interface{}) error {
-	addr, err := getAddress(immediates, 0)
+func jt(ctx context.Context, imms []interface{}) error {
+	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
 	}
@@ -242,8 +327,8 @@ func jt(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func jf(ctx context.Context, immediates []interface{}) error {
-	addr, err := getAddress(immediates, 0)
+func jf(ctx context.Context, imms []interface{}) error {
+	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
 	}
@@ -261,7 +346,7 @@ func jf(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func eq(ctx context.Context, immediates []interface{}) error {
+func eq(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -275,7 +360,7 @@ func eq(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func ne(ctx context.Context, immediates []interface{}) error {
+func ne(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -289,7 +374,7 @@ func ne(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func gt(ctx context.Context, immediates []interface{}) error {
+func gt(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -303,7 +388,7 @@ func gt(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func ge(ctx context.Context, immediates []interface{}) error {
+func ge(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -317,7 +402,7 @@ func ge(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func lt(ctx context.Context, immediates []interface{}) error {
+func lt(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -331,7 +416,7 @@ func lt(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func le(ctx context.Context, immediates []interface{}) error {
+func le(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -345,7 +430,7 @@ func le(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func add(ctx context.Context, immediates []interface{}) error {
+func add(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -359,7 +444,7 @@ func add(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func sub(ctx context.Context, immediates []interface{}) error {
+func sub(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -373,7 +458,7 @@ func sub(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func mul(ctx context.Context, immediates []interface{}) error {
+func mul(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
@@ -387,7 +472,7 @@ func mul(ctx context.Context, immediates []interface{}) error {
 	return nil
 }
 
-func div(ctx context.Context, immediates []interface{}) error {
+func div(ctx context.Context, imms []interface{}) error {
 	vs, err := MultiPop(ctx, 2)
 	if err != nil {
 		return err
