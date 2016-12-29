@@ -13,6 +13,7 @@ type processor map[Mnemonic]Process
 
 func newProcessor() processor {
 	return processor{
+		MnemonicNop:            nop,
 		MnemonicPush:           push,
 		MnemonicPop:            pop,
 		MnemonicLoad:           ld,
@@ -136,6 +137,11 @@ func getCount(vs []interface{}, idx, min int) (int, error) {
 	}
 
 	return count, nil
+}
+
+func nop(ctx context.Context, imms []interface{}) error {
+	GetPC(ctx).Increment()
+	return nil
 }
 
 func push(ctx context.Context, imms []interface{}) error {

@@ -13,7 +13,8 @@ type Mnemonic string
 
 // These constants are instruction mnemonics.
 const (
-	MnemonicPush           Mnemonic = "push"
+	MnemonicNop            Mnemonic = "nop"
+	MnemonicPush                    = "push"
 	MnemonicPop                     = "pop"
 	MnemonicLoad                    = "ld"
 	MnemonicLoadArgument            = "lda"
