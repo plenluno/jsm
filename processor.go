@@ -32,6 +32,9 @@ func newProcessor() processor {
 		MnemonicGreaterOrEqual: ge,
 		MnemonicLessThan:       lt,
 		MnemonicLessOrEqual:    le,
+		MnemonicNot:            not,
+		MnemonicAnd:            and,
+		MnemonicOr:             or,
 		MnemonicAdd:            add,
 		MnemonicSubtract:       sub,
 		MnemonicMultiply:       mul,
@@ -429,6 +432,48 @@ func le(ctx context.Context, imms []interface{}) error {
 	}
 
 	if err := Push(ctx, Less(vs[0], vs[1]) || Equal(vs[0], vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func not(ctx context.Context, imms []interface{}) error {
+	v, err := Pop(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, !ToBool(v)); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func and(ctx context.Context, imms []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, ToBool(vs[0]) && ToBool(vs[1])); err != nil {
+		return err
+	}
+
+	GetPC(ctx).Increment()
+	return nil
+}
+
+func or(ctx context.Context, imms []interface{}) error {
+	vs, err := MultiPop(ctx, 2)
+	if err != nil {
+		return err
+	}
+
+	if err := Push(ctx, ToBool(vs[0]) || ToBool(vs[1])); err != nil {
 		return err
 	}
 
