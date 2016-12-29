@@ -14,7 +14,7 @@ type Machine interface {
 
 	Run(program []Instruction, args []interface{}) (interface{}, error)
 
-	Extend(mnemonic Mnemonic, process Process) error
+	Extend(mnemonic Mnemonic, process Process, preprocess Preprocess) error
 }
 
 // NewMachine creates a new Machine.
@@ -23,7 +23,8 @@ func NewMachine() Machine {
 }
 
 type machine struct {
-	processor processor
+	processor    processor
+	preprocessor preprocessor
 
 	Program []Instruction `json:"program"`
 	PC      *address      `json:"pc"`
@@ -36,6 +37,7 @@ type machine struct {
 func newMachine() *machine {
 	m := new(machine)
 	m.processor = newProcessor()
+	m.preprocessor = newPreprocessor()
 	m.PC = newAddress()
 	m.Heap = newHeap()
 	m.Stack = newStack()
@@ -58,22 +60,21 @@ func (m *machine) Run(program []Instruction, args []interface{}) (interface{}, e
 }
 
 func (m *machine) load(program []Instruction, args []interface{}) error {
-	if program == nil {
-		return errors.New("no program")
+	p, err := m.preprocessor.preprocess(program)
+	if err != nil {
+		return err
 	}
 
 	if args == nil {
 		args = []interface{}{}
 	}
 
-	// TODO: Inspect program
-
 	m.Clear()
-	m.Program = program
+	m.Program = p
 
 	frame := NewFrame()
 	frame.Arguments = args
-	frame.ReturnTo.SetValue(len(program))
+	frame.ReturnTo.SetValue(len(p))
 	m.Stack.Push(frame)
 	return nil
 }
@@ -88,8 +89,11 @@ func (m *machine) step() error {
 	return m.processor[inst.Mnemonic](m.context, inst.Immediates)
 }
 
-func (m *machine) Extend(mnemonic Mnemonic, process Process) error {
-	return m.processor.extend(mnemonic, process)
+func (m *machine) Extend(mnemonic Mnemonic, process Process, preprocess Preprocess) error {
+	if err := m.processor.extend(mnemonic, process); err != nil {
+		return err
+	}
+	return m.preprocessor.extend(mnemonic, preprocess)
 }
 
 func (m *machine) Clear() {

@@ -1,52 +1,128 @@
 package jsm
 
-// Preprocess preprocesses the given program.
-func Preprocess(program []Instruction) ([]Instruction, error) {
-	// TODO: Inspect program
-	return preprocess(program), nil
+import (
+	"context"
+
+	"github.com/pkg/errors"
+)
+
+// Preprocess preprocesses the immediates of an instruction.
+type Preprocess func(ctx context.Context, imms []interface{}) ([]interface{}, error)
+
+type preprocessor map[Mnemonic]Preprocess
+
+func newPreprocessor() preprocessor {
+	return preprocessor{
+		MnemonicPush:        noPreprocessing,
+		MnemonicPop:         atMostOneInteger,
+		MnemonicCall:        immediatesOfCall,
+		MnemonicReturn:      atMostOneInteger,
+		MnemonicJump:        oneAddress,
+		MnemonicJumpIfTrue:  oneAddress,
+		MnemonicJumpIfFalse: oneAddress,
+	}
 }
 
-func preprocess(program []Instruction) []Instruction {
-	preprocessed := make([]Instruction, len(program))
-	addrs := map[string]int{}
+func (pp preprocessor) extend(mnemonic Mnemonic, preprocess Preprocess) error {
+	if mnemonic == "" {
+		return errors.New("no mnemonic")
+	}
+
+	if preprocess == nil {
+		return nil
+	}
+
+	if _, ok := pp[mnemonic]; ok {
+		return errors.Errorf("mnemonic already defined: %s", mnemonic)
+	}
+
+	pp[mnemonic] = preprocess
+	return nil
+}
+
+func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) {
+	if program == nil {
+		return nil, errors.New("no program")
+	}
+
+	ctx := newProgramContext()
+	labels := GetLabels(ctx)
 	for idx, inst := range program {
-		preprocessed[idx].Mnemonic = inst.Mnemonic
 		if inst.Label != "" {
-			addrs[inst.Label] = idx
+			labels[inst.Label] = idx
 		}
 	}
+
+	preprocessed := make([]Instruction, len(program))
 	for idx, inst := range program {
-		preprocessed[idx].Immediates = preprocessImmediates(inst, addrs)
-	}
-	return preprocessed
-}
+		p := pp[inst.Mnemonic]
+		if p == nil {
+			p = noImmediate
+		}
 
-func preprocessImmediates(inst Instruction, addrs map[string]int) []interface{} {
-	preprocessed := make([]interface{}, len(inst.Immediates))
-	for idx, imm := range inst.Immediates {
-		switch inst.Mnemonic {
-		case MnemonicPop, MnemonicReturn:
-			preprocessed[idx] = ToInteger(imm)
-		case MnemonicCall:
-			if idx == 0 {
-				preprocessed[idx] = preprocessAddress(imm, addrs)
-			} else {
-				preprocessed[idx] = ToInteger(imm)
-			}
+		imms, err := p(ctx, inst.Immediates)
+		if err != nil {
+			return nil, err
+		}
 
-		case MnemonicJump, MnemonicJumpIfTrue, MnemonicJumpIfFalse:
-			preprocessed[idx] = preprocessAddress(imm, addrs)
-		default:
-			preprocessed[idx] = imm
+		preprocessed[idx] = Instruction{
+			Mnemonic:   inst.Mnemonic,
+			Immediates: imms,
 		}
 	}
-	return preprocessed
+	return preprocessed, nil
 }
 
-func preprocessAddress(v interface{}, addrs map[string]int) interface{} {
+func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, errors.New("no immediate")
+	case 1:
+		return []interface{}{toAddress(ctx, imms[0])}, nil
+	case 2:
+		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+	default:
+		return nil, errors.New("too many immediates")
+	}
+}
+
+func noPreprocessing(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	return imms, nil
+}
+
+func atMostOneInteger(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, nil
+	case 1:
+		return []interface{}{ToInteger(imms[0])}, nil
+	default:
+		return nil, errors.New("too many immediates")
+	}
+}
+
+func oneAddress(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, errors.New("no immediate")
+	case 1:
+		return []interface{}{toAddress(ctx, imms[0])}, nil
+	default:
+		return nil, errors.New("too many immediates")
+	}
+}
+
+func noImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	if len(imms) > 0 {
+		return nil, errors.New("too many immediates")
+	}
+	return nil, nil
+}
+
+func toAddress(ctx context.Context, v interface{}) interface{} {
 	switch v.(type) {
 	case string:
-		return addrs[v.(string)]
+		return GetLabels(ctx)[v.(string)]
 	default:
 		return ToInteger(v)
 	}
