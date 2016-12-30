@@ -85,15 +85,27 @@ type programContextKey int
 
 const (
 	keyLabels programContextKey = iota
+	keyMnemonic
 )
 
 func newProgramContext() context.Context {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, keyLabels, map[string]int{})
+	ctx = context.WithValue(ctx, keyMnemonic, new(Mnemonic))
 	return ctx
 }
 
 // GetLabels retrieves the program labels from Context.
 func GetLabels(ctx context.Context) map[string]int {
 	return ctx.Value(keyLabels).(map[string]int)
+}
+
+// GetMnemonic retrieves the currently preprocessed mnemonic from Context.
+func GetMnemonic(ctx context.Context) Mnemonic {
+	return *ctx.Value(keyMnemonic).(*Mnemonic)
+}
+
+func setMnemonic(ctx context.Context, mnemonic Mnemonic) {
+	m := ctx.Value(keyMnemonic).(*Mnemonic)
+	*m = mnemonic
 }

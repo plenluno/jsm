@@ -2,6 +2,7 @@ package jsm
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 )
@@ -55,7 +56,10 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 
 	preprocessed := make([]Instruction, len(program))
 	for idx, inst := range program {
-		p := pp[inst.Mnemonic]
+		m := inst.Mnemonic
+		setMnemonic(ctx, m)
+
+		p := pp[m]
 		if p == nil {
 			p = noImmediate
 		}
@@ -66,7 +70,7 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 		}
 
 		preprocessed[idx] = Instruction{
-			Mnemonic:   inst.Mnemonic,
+			Mnemonic:   m,
 			Immediates: imms,
 		}
 	}
@@ -76,13 +80,13 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, error) {
 	switch len(imms) {
 	case 0:
-		return nil, errors.New("no immediate")
+		return nil, preprocessingError(ctx, imms, "no immediate")
 	case 1:
 		return []interface{}{toAddress(ctx, imms[0])}, nil
 	case 2:
 		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
 	default:
-		return nil, errors.New("too many immediates")
+		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
@@ -97,24 +101,24 @@ func atMostOneInteger(ctx context.Context, imms []interface{}) ([]interface{}, e
 	case 1:
 		return []interface{}{ToInteger(imms[0])}, nil
 	default:
-		return nil, errors.New("too many immediates")
+		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
 func oneAddress(ctx context.Context, imms []interface{}) ([]interface{}, error) {
 	switch len(imms) {
 	case 0:
-		return nil, errors.New("no immediate")
+		return nil, preprocessingError(ctx, imms, "no immediate")
 	case 1:
 		return []interface{}{toAddress(ctx, imms[0])}, nil
 	default:
-		return nil, errors.New("too many immediates")
+		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
 func noImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
 	if len(imms) > 0 {
-		return nil, errors.New("too many immediates")
+		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 	return nil, nil
 }
@@ -126,4 +130,15 @@ func toAddress(ctx context.Context, v interface{}) interface{} {
 	default:
 		return ToInteger(v)
 	}
+}
+
+func preprocessingError(ctx context.Context, imms []interface{}, msg string) error {
+	data, err := json.Marshal(Instruction{
+		Mnemonic:   GetMnemonic(ctx),
+		Immediates: imms,
+	})
+	if err != nil {
+		return errors.Wrap(err, "cannot convert to json")
+	}
+	return errors.Errorf(msg+": %s", string(data))
 }
