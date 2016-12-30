@@ -1,0 +1,53 @@
+[{
+    "label": "fib",
+    "mnemonic": "push",
+    "immediates": [0]
+}, {
+    "mnemonic": "lda"
+}, {
+    "mnemonic": "push",
+    "immediates": [2]
+}, {
+    "mnemonic": "lt"
+}, {
+    "mnemonic": "jt",
+    "immediates": ["ret1"]
+}, {
+    "mnemonic": "push",
+    "immediates": [0]
+}, {
+    "mnemonic": "lda"
+}, {
+    "mnemonic": "push",
+    "immediates": [1]
+}, {
+    "mnemonic": "sub"
+}, {
+    "mnemonic": "call",
+    "immediates": ["fib", 1]
+}, {
+    "mnemonic": "push",
+    "immediates": [0]
+}, {
+    "mnemonic": "lda"
+}, {
+    "mnemonic": "push",
+    "immediates": [2]
+}, {
+    "mnemonic": "sub"
+}, {
+    "mnemonic": "call",
+    "immediates": ["fib", 1]
+}, {
+    "mnemonic": "add"
+}, {
+    "mnemonic": "ret",
+    "immediates": [1]
+}, {
+    "label": "ret1",
+    "mnemonic": "push",
+    "immediates": [1]
+}, {
+    "mnemonic": "ret",
+    "immediates": [1]
+}]
