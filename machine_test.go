@@ -67,3 +67,33 @@ func TestMachineExtend(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal([]interface{}{13}, res)
 }
+
+func BenchmarkFibJSM(b *testing.B) {
+	m := NewMachine()
+
+	var p []Instruction
+	j, _ := ioutil.ReadFile("./examples/fibonacci.json")
+	json.Unmarshal(j, &p)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		m.Run(p, []interface{}{20})
+	}
+}
+
+func BenchmarkFibNative(b *testing.B) {
+	m := NewMachine()
+	m.Extend("fib", fib, nil)
+
+	p := []Instruction{
+		{Mnemonic: MnemonicPush, Immediates: []interface{}{0}},
+		{Mnemonic: MnemonicLoadArgument},
+		{Mnemonic: "fib"},
+		{Mnemonic: MnemonicReturn, Immediates: []interface{}{1}},
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		m.Run(p, []interface{}{20})
+	}
+}
