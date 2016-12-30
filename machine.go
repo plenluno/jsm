@@ -86,7 +86,11 @@ func (m *machine) inProgress() bool {
 
 func (m *machine) step() error {
 	inst := &m.Program[m.PC.GetValue()]
-	return m.processor[inst.Mnemonic](m.context, inst.Immediates)
+	p, ok := m.processor[inst.Mnemonic]
+	if !ok {
+		return errors.Errorf("cannot process %s", inst.Mnemonic)
+	}
+	return p(m.context, inst.Immediates)
 }
 
 func (m *machine) Extend(mnemonic Mnemonic, process Process, preprocess Preprocess) error {
