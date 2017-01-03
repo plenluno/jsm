@@ -11,8 +11,21 @@ type Stack interface {
 	Clearable
 	Restorable
 
+	// Push pushes a value onto the stack.
 	Push(v interface{})
+
+	// MultiPush pushes multiple values onto the stack.
+	MultiPush(vs []interface{})
+
+	// Pop pops a value from the stack.
 	Pop() (interface{}, error)
+
+	// MultiPop pops multiple values from the stack.
+	// The return slice can be modified by Push/MultiPush.
+	// So you should read the slice before calling Push/MultiPush.
+	MultiPop(n int) ([]interface{}, error)
+
+	// Peek returns the value at the top of the stack.
 	Peek() (interface{}, error)
 }
 
@@ -32,6 +45,10 @@ func (s *stack) Push(v interface{}) {
 	*s = append(*s, v)
 }
 
+func (s *stack) MultiPush(vs []interface{}) {
+	*s = append(*s, vs...)
+}
+
 func (s *stack) Pop() (interface{}, error) {
 	l := len(*s)
 	if l == 0 {
@@ -41,6 +58,17 @@ func (s *stack) Pop() (interface{}, error) {
 	v := (*s)[l-1]
 	*s = (*s)[:l-1]
 	return v, nil
+}
+
+func (s *stack) MultiPop(n int) ([]interface{}, error) {
+	l := len(*s)
+	if l < n {
+		return nil, errors.New("too few values")
+	}
+
+	vs := (*s)[l-n:]
+	*s = (*s)[:l-n]
+	return vs, nil
 }
 
 func (s *stack) Peek() (interface{}, error) {

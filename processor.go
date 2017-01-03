@@ -97,9 +97,7 @@ func MultiPush(ctx context.Context, vs []interface{}) error {
 		return err
 	}
 
-	for _, v := range vs {
-		frame.Operands.Push(v)
-	}
+	frame.Operands.MultiPush(vs)
 	return nil
 }
 
@@ -124,14 +122,9 @@ func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
 		return nil, err
 	}
 
-	operands := make([]interface{}, n)
-	for i := 0; i < n; i++ {
-		v, err := frame.Operands.Pop()
-		if err != nil {
-			return nil, errors.New("no operand")
-		}
-
-		operands[n-i-1] = v
+	operands, err := frame.Operands.MultiPop(n)
+	if err != nil {
+		return nil, errors.New("too few operands")
 	}
 	return operands, nil
 }
