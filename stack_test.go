@@ -28,6 +28,23 @@ func TestStackPushPop(t *testing.T) {
 	assert.Error(err)
 }
 
+func TestStackDo(t *testing.T) {
+	assert := assert.New(t)
+
+	s := NewStack()
+	s.Push(12)
+	s.Push(3)
+	s.Do(func(vs []interface{}) interface{} {
+		return ToInteger(vs[0]) / ToInteger(vs[1])
+	}, 2)
+	v, err := s.Pop()
+	assert.NoError(err)
+	assert.Equal(4, v)
+
+	_, err = s.Pop()
+	assert.Error(err)
+}
+
 func TestStackPeekClear(t *testing.T) {
 	assert := assert.New(t)
 

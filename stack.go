@@ -27,6 +27,9 @@ type Stack interface {
 
 	// Peek returns the value at the top of the stack.
 	Peek() (interface{}, error)
+
+	// Do executes the given operation against the values at the top of the stack.
+	Do(op func([]interface{}) interface{}, arity int) error
 }
 
 // NewStack creates a new Stack.
@@ -63,7 +66,7 @@ func (s *stack) Pop() (interface{}, error) {
 func (s *stack) MultiPop(n int) ([]interface{}, error) {
 	l := len(*s)
 	if l < n {
-		return nil, errors.New("too few values")
+		return nil, errors.New("too few elements")
 	}
 
 	vs := (*s)[l-n:]
@@ -78,6 +81,17 @@ func (s *stack) Peek() (interface{}, error) {
 	}
 
 	return (*s)[l-1], nil
+}
+
+func (s *stack) Do(op func([]interface{}) interface{}, arity int) error {
+	l := len(*s)
+	if l < arity {
+		return errors.New("too few elements")
+	}
+
+	(*s)[l-arity] = op((*s)[l-arity:])
+	*s = (*s)[:l-arity+1]
+	return nil
 }
 
 func (s *stack) Clear() {
