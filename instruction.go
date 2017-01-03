@@ -6,6 +6,8 @@ type Instruction struct {
 	Mnemonic   Mnemonic      `json:"mnemonic"`
 	Immediates []interface{} `json:"immediates,omitempty"`
 	Comment    string        `json:"comment,omitempty"`
+
+	opcode int
 }
 
 // Mnemonic is a instruction mnemonic for JSM.
@@ -40,3 +42,14 @@ const (
 	MnemonicMultiply                = "mul"
 	MnemonicDivide                  = "div"
 )
+
+var opcodes = map[Mnemonic]int{}
+
+func opcode(mnemonic Mnemonic) int {
+	opcode, ok := opcodes[mnemonic]
+	if !ok {
+		opcode = len(opcodes)
+		opcodes[mnemonic] = opcode
+	}
+	return opcode
+}

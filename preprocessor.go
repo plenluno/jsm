@@ -12,8 +12,8 @@ type Preprocess func(ctx context.Context, imms []interface{}) ([]interface{}, er
 
 type preprocessor map[Mnemonic]Preprocess
 
-func newPreprocessor() preprocessor {
-	return preprocessor{
+func newPreprocessor() *preprocessor {
+	return &preprocessor{
 		MnemonicPush:        noPreprocessing,
 		MnemonicPop:         atMostOneInteger,
 		MnemonicCall:        immediatesOfCall,
@@ -72,6 +72,7 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 		preprocessed[idx] = Instruction{
 			Mnemonic:   m,
 			Immediates: imms,
+			opcode:     opcode(m),
 		}
 	}
 	return preprocessed, nil

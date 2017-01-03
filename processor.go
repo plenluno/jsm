@@ -9,40 +9,45 @@ import (
 // Process executes operations on JSM.
 type Process func(ctx context.Context, imms []interface{}) error
 
-type processor map[Mnemonic]Process
+type processor []Process
 
-func newProcessor() processor {
-	return processor{
-		MnemonicNop:            nop,
-		MnemonicPush:           push,
-		MnemonicPop:            pop,
-		MnemonicLoad:           ld,
-		MnemonicLoadArgument:   lda,
-		MnemonicLoadLocal:      ldl,
-		MnemonicStore:          st,
-		MnemonicStoreLocal:     stl,
-		MnemonicCall:           call,
-		MnemonicReturn:         ret,
-		MnemonicJump:           jmp,
-		MnemonicJumpIfTrue:     jt,
-		MnemonicJumpIfFalse:    jf,
-		MnemonicEqual:          eq,
-		MnemonicNotEqual:       ne,
-		MnemonicGreaterThan:    gt,
-		MnemonicGreaterOrEqual: ge,
-		MnemonicLessThan:       lt,
-		MnemonicLessOrEqual:    le,
-		MnemonicNot:            not,
-		MnemonicAnd:            and,
-		MnemonicOr:             or,
-		MnemonicAdd:            add,
-		MnemonicSubtract:       sub,
-		MnemonicMultiply:       mul,
-		MnemonicDivide:         div,
+func newProcessor() *processor {
+	p := new(processor)
+	extend := func(mnemonic Mnemonic, process Process) {
+		if err := p.extend(mnemonic, process); err != nil {
+			panic(err)
+		}
 	}
+	extend(MnemonicNop, nop)
+	extend(MnemonicPush, push)
+	extend(MnemonicPop, pop)
+	extend(MnemonicLoad, ld)
+	extend(MnemonicLoadArgument, lda)
+	extend(MnemonicLoadLocal, ldl)
+	extend(MnemonicStore, st)
+	extend(MnemonicStoreLocal, stl)
+	extend(MnemonicCall, call)
+	extend(MnemonicReturn, ret)
+	extend(MnemonicJump, jmp)
+	extend(MnemonicJumpIfTrue, jt)
+	extend(MnemonicJumpIfFalse, jf)
+	extend(MnemonicEqual, eq)
+	extend(MnemonicNotEqual, ne)
+	extend(MnemonicGreaterThan, gt)
+	extend(MnemonicGreaterOrEqual, ge)
+	extend(MnemonicLessThan, lt)
+	extend(MnemonicLessOrEqual, le)
+	extend(MnemonicNot, not)
+	extend(MnemonicAnd, and)
+	extend(MnemonicOr, or)
+	extend(MnemonicAdd, add)
+	extend(MnemonicSubtract, sub)
+	extend(MnemonicMultiply, mul)
+	extend(MnemonicDivide, div)
+	return p
 }
 
-func (p processor) extend(mnemonic Mnemonic, process Process) error {
+func (p *processor) extend(mnemonic Mnemonic, process Process) error {
 	if mnemonic == "" {
 		return errors.New("no mnemonic")
 	}
@@ -51,12 +56,27 @@ func (p processor) extend(mnemonic Mnemonic, process Process) error {
 		return errors.New("no process")
 	}
 
-	if _, ok := p[mnemonic]; ok {
-		return errors.Errorf("mnemonic already defined: %s", mnemonic)
+	oc := opcode(mnemonic)
+	size := len(*p)
+	if size > oc && (*p)[oc] != nil {
+		return errors.Errorf("%s already defined", mnemonic)
 	}
 
-	p[mnemonic] = process
+	if size <= oc {
+		tmp := *p
+		*p = make([]Process, oc+1)
+		copy(*p, tmp)
+	}
+	(*p)[oc] = process
 	return nil
+}
+
+func (p processor) process(ctx context.Context, inst *Instruction) error {
+	oc := inst.opcode
+	if len(p) <= oc || p[oc] == nil {
+		return errors.Errorf("cannot process %s", inst.Mnemonic)
+	}
+	return p[oc](ctx, inst.Immediates)
 }
 
 // Push pushes a value onto the operand stack.
