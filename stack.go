@@ -24,7 +24,8 @@ func NewStack() Stack {
 type stack []interface{}
 
 func newStack() *stack {
-	return &stack{}
+	s := make(stack, 0, 10)
+	return &s
 }
 
 func (s *stack) Push(v interface{}) {
@@ -52,7 +53,7 @@ func (s *stack) Peek() (interface{}, error) {
 }
 
 func (s *stack) Clear() {
-	*s = []interface{}{}
+	*s = (*s)[:0]
 }
 
 func (s *stack) Dump() ([]byte, error) {
