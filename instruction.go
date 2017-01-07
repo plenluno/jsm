@@ -37,6 +37,7 @@ const (
 	MnemonicNot                     = "not"
 	MnemonicAnd                     = "and"
 	MnemonicOr                      = "or"
+	MnemonicNeg                     = "neg"
 	MnemonicAdd                     = "add"
 	MnemonicSubtract                = "sub"
 	MnemonicMultiply                = "mul"

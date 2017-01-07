@@ -37,9 +37,10 @@ func newProcessor() *processor {
 	extend(MnemonicGreaterOrEqual, binaryOp(ge))
 	extend(MnemonicLessThan, binaryOp(lt))
 	extend(MnemonicLessOrEqual, binaryOp(le))
-	extend(MnemonicNot, not)
+	extend(MnemonicNot, unaryOp(not))
 	extend(MnemonicAnd, binaryOp(and))
 	extend(MnemonicOr, binaryOp(or))
+	extend(MnemonicNeg, unaryOp(neg))
 	extend(MnemonicAdd, binaryOp(add))
 	extend(MnemonicSubtract, binaryOp(sub))
 	extend(MnemonicMultiply, binaryOp(mul))
@@ -381,6 +382,17 @@ func jf(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
+func unaryOp(op func([]interface{}) (interface{}, error)) Process {
+	return func(ctx context.Context, imms []interface{}) error {
+		if err := Do(ctx, op, 1); err != nil {
+			return err
+		}
+
+		GetPC(ctx).Increment()
+		return nil
+	}
+}
+
 func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 	return func(ctx context.Context, imms []interface{}) error {
 		if err := Do(ctx, op, 2); err != nil {
@@ -416,18 +428,8 @@ func le(vs []interface{}) (interface{}, error) {
 	return Less(vs[0], vs[1]) || Equal(vs[0], vs[1]), nil
 }
 
-func not(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, !ToBool(v)); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func not(vs []interface{}) (interface{}, error) {
+	return !ToBool(vs[0]), nil
 }
 
 func and(vs []interface{}) (interface{}, error) {
@@ -436,6 +438,10 @@ func and(vs []interface{}) (interface{}, error) {
 
 func or(vs []interface{}) (interface{}, error) {
 	return ToBool(vs[0]) || ToBool(vs[1]), nil
+}
+
+func neg(vs []interface{}) (interface{}, error) {
+	return -ToNumber(vs[0]), nil
 }
 
 func add(vs []interface{}) (interface{}, error) {
