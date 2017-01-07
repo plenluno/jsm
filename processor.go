@@ -31,19 +31,19 @@ func newProcessor() *processor {
 	extend(MnemonicJump, jmp)
 	extend(MnemonicJumpIfTrue, jt)
 	extend(MnemonicJumpIfFalse, jf)
-	extend(MnemonicEqual, eq)
-	extend(MnemonicNotEqual, ne)
-	extend(MnemonicGreaterThan, gt)
-	extend(MnemonicGreaterOrEqual, ge)
-	extend(MnemonicLessThan, lt)
-	extend(MnemonicLessOrEqual, le)
+	extend(MnemonicEqual, binaryOp(eq))
+	extend(MnemonicNotEqual, binaryOp(ne))
+	extend(MnemonicGreaterThan, binaryOp(gt))
+	extend(MnemonicGreaterOrEqual, binaryOp(ge))
+	extend(MnemonicLessThan, binaryOp(lt))
+	extend(MnemonicLessOrEqual, binaryOp(le))
 	extend(MnemonicNot, not)
-	extend(MnemonicAnd, and)
-	extend(MnemonicOr, or)
-	extend(MnemonicAdd, add)
-	extend(MnemonicSubtract, sub)
-	extend(MnemonicMultiply, mul)
-	extend(MnemonicDivide, div)
+	extend(MnemonicAnd, binaryOp(and))
+	extend(MnemonicOr, binaryOp(or))
+	extend(MnemonicAdd, binaryOp(add))
+	extend(MnemonicSubtract, binaryOp(sub))
+	extend(MnemonicMultiply, binaryOp(mul))
+	extend(MnemonicDivide, binaryOp(div))
 	return p
 }
 
@@ -127,6 +127,19 @@ func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
 		return nil, errors.New("too few operands")
 	}
 	return operands, nil
+}
+
+// Do executes the given operation against the values at the top of the operand stack.
+func Do(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
+	frame, err := GetFrame(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := frame.Operands.Do(op, arity); err != nil {
+		return errors.New("too few operands")
+	}
+	return nil
 }
 
 func getAddress(vs []interface{}, idx int) (int, error) {
@@ -368,88 +381,39 @@ func jf(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func eq(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
+func binaryOp(op func([]interface{}) (interface{}, error)) Process {
+	return func(ctx context.Context, imms []interface{}) error {
+		if err := Do(ctx, op, 2); err != nil {
+			return err
+		}
 
-	if err := Push(ctx, Equal(vs[0], vs[1])); err != nil {
-		return err
+		GetPC(ctx).Increment()
+		return nil
 	}
-
-	GetPC(ctx).Increment()
-	return nil
 }
 
-func ne(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, !Equal(vs[0], vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func eq(vs []interface{}) (interface{}, error) {
+	return Equal(vs[0], vs[1]), nil
 }
 
-func gt(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, Less(vs[1], vs[0])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func ne(vs []interface{}) (interface{}, error) {
+	return !Equal(vs[0], vs[1]), nil
 }
 
-func ge(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, Less(vs[1], vs[0]) || Equal(vs[1], vs[0])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func gt(vs []interface{}) (interface{}, error) {
+	return Less(vs[1], vs[0]), nil
 }
 
-func lt(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, Less(vs[0], vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func ge(vs []interface{}) (interface{}, error) {
+	return Less(vs[1], vs[0]) || Equal(vs[1], vs[0]), nil
 }
 
-func le(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
+func lt(vs []interface{}) (interface{}, error) {
+	return Less(vs[0], vs[1]), nil
+}
 
-	if err := Push(ctx, Less(vs[0], vs[1]) || Equal(vs[0], vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func le(vs []interface{}) (interface{}, error) {
+	return Less(vs[0], vs[1]) || Equal(vs[0], vs[1]), nil
 }
 
 func not(ctx context.Context, imms []interface{}) error {
@@ -466,92 +430,32 @@ func not(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func and(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, ToBool(vs[0]) && ToBool(vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func and(vs []interface{}) (interface{}, error) {
+	return ToBool(vs[0]) && ToBool(vs[1]), nil
 }
 
-func or(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, ToBool(vs[0]) || ToBool(vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func or(vs []interface{}) (interface{}, error) {
+	return ToBool(vs[0]) || ToBool(vs[1]), nil
 }
 
-func add(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, ToNumber(vs[0])+ToNumber(vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func add(vs []interface{}) (interface{}, error) {
+	return ToNumber(vs[0]) + ToNumber(vs[1]), nil
 }
 
-func sub(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, ToNumber(vs[0])-ToNumber(vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func sub(vs []interface{}) (interface{}, error) {
+	return ToNumber(vs[0]) - ToNumber(vs[1]), nil
 }
 
-func mul(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, ToNumber(vs[0])*ToNumber(vs[1])); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func mul(vs []interface{}) (interface{}, error) {
+	return ToNumber(vs[0]) * ToNumber(vs[1]), nil
 }
 
-func div(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
+func div(vs []interface{}) (interface{}, error) {
 	num1 := ToNumber(vs[0])
 	num2 := ToNumber(vs[1])
 	if num2 == 0.0 {
-		return errors.New("divide by zero")
+		return nil, errors.New("divide by zero")
 	}
 
-	if err := Push(ctx, num1/num2); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+	return num1 / num2, nil
 }

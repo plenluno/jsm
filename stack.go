@@ -29,7 +29,7 @@ type Stack interface {
 	Peek() (interface{}, error)
 
 	// Do executes the given operation against the values at the top of the stack.
-	Do(op func([]interface{}) interface{}, arity int) error
+	Do(op func([]interface{}) (interface{}, error), arity int) error
 }
 
 // NewStack creates a new Stack.
@@ -83,13 +83,18 @@ func (s *stack) Peek() (interface{}, error) {
 	return (*s)[l-1], nil
 }
 
-func (s *stack) Do(op func([]interface{}) interface{}, arity int) error {
+func (s *stack) Do(op func([]interface{}) (interface{}, error), arity int) error {
 	l := len(*s)
 	if l < arity {
 		return errors.New("too few elements")
 	}
 
-	(*s)[l-arity] = op((*s)[l-arity:])
+	v, err := op((*s)[l-arity:])
+	if err != nil {
+		return err
+	}
+
+	(*s)[l-arity] = v
 	*s = (*s)[:l-arity+1]
 	return nil
 }

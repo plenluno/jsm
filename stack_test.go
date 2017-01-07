@@ -34,8 +34,8 @@ func TestStackDo(t *testing.T) {
 	s := NewStack()
 	s.Push(12)
 	s.Push(3)
-	s.Do(func(vs []interface{}) interface{} {
-		return ToInteger(vs[0]) / ToInteger(vs[1])
+	s.Do(func(vs []interface{}) (interface{}, error) {
+		return ToInteger(vs[0]) / ToInteger(vs[1]), nil
 	}, 2)
 	v, err := s.Pop()
 	assert.NoError(err)
