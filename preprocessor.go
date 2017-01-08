@@ -14,17 +14,23 @@ type preprocessor map[Mnemonic]Preprocess
 
 func newPreprocessor() *preprocessor {
 	return &preprocessor{
-		MnemonicPush:        noPreprocessing,
-		MnemonicPop:         atMostOneInteger,
-		MnemonicCall:        immediatesOfCall,
-		MnemonicReturn:      atMostOneInteger,
-		MnemonicJump:        oneAddress,
-		MnemonicJumpIfTrue:  oneAddress,
-		MnemonicJumpIfFalse: oneAddress,
-		MnemonicAdd:         atMostOneNumber,
-		MnemonicSubtract:    atMostOneNumber,
-		MnemonicMultiply:    atMostOneNumber,
-		MnemonicDivide:      atMostOneNumber,
+		MnemonicPush:           noPreprocessing,
+		MnemonicPop:            atMostOneInteger,
+		MnemonicCall:           immediatesOfCall,
+		MnemonicReturn:         atMostOneInteger,
+		MnemonicJump:           oneAddress,
+		MnemonicJumpIfTrue:     oneAddress,
+		MnemonicJumpIfFalse:    oneAddress,
+		MnemonicEqual:          atMostOneImmediate,
+		MnemonicNotEqual:       atMostOneImmediate,
+		MnemonicGreaterThan:    atMostOneImmediate,
+		MnemonicGreaterOrEqual: atMostOneImmediate,
+		MnemonicLessThan:       atMostOneImmediate,
+		MnemonicLessOrEqual:    atMostOneImmediate,
+		MnemonicAdd:            atMostOneNumber,
+		MnemonicSubtract:       atMostOneNumber,
+		MnemonicMultiply:       atMostOneNumber,
+		MnemonicDivide:         atMostOneNumber,
 	}
 }
 
@@ -82,21 +88,26 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 	return preprocessed, nil
 }
 
-func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func noPreprocessing(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	return imms, nil
+}
+
+func noImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	if len(imms) > 0 {
+		return nil, preprocessingError(ctx, imms, "too many immediates")
+	}
+	return nil, nil
+}
+
+func atMostOneImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
 	switch len(imms) {
 	case 0:
-		return nil, preprocessingError(ctx, imms, "no immediate")
+		return nil, nil
 	case 1:
-		return []interface{}{toAddress(ctx, imms[0])}, nil
-	case 2:
-		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+		return imms, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
-}
-
-func noPreprocessing(ctx context.Context, imms []interface{}) ([]interface{}, error) {
-	return imms, nil
 }
 
 func atMostOneInteger(ctx context.Context, imms []interface{}) ([]interface{}, error) {
@@ -132,11 +143,17 @@ func oneAddress(ctx context.Context, imms []interface{}) ([]interface{}, error) 
 	}
 }
 
-func noImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
-	if len(imms) > 0 {
+func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, preprocessingError(ctx, imms, "no immediate")
+	case 1:
+		return []interface{}{toAddress(ctx, imms[0])}, nil
+	case 2:
+		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
-	return nil, nil
 }
 
 func toAddress(ctx context.Context, v interface{}) interface{} {

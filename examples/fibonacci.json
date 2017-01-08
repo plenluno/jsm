@@ -5,10 +5,8 @@
 }, {
     "mnemonic": "lda"
 }, {
-    "mnemonic": "push",
+    "mnemonic": "lt",
     "immediates": [2]
-}, {
-    "mnemonic": "lt"
 }, {
     "mnemonic": "jt",
     "immediates": ["ret1"]
