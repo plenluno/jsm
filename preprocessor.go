@@ -34,6 +34,10 @@ func newPreprocessor() *preprocessor {
 		MnemonicSubtract:       atMostOneNumber,
 		MnemonicMultiply:       atMostOneNumber,
 		MnemonicDivide:         atMostOneNumber,
+		MnemonicIncrement:      atMostOneString,
+		MnemonicIncrementLocal: atMostOneString,
+		MnemonicDecrement:      atMostOneString,
+		MnemonicDecrementLocal: atMostOneString,
 	}
 }
 

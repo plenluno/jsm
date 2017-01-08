@@ -45,6 +45,10 @@ func newProcessor() *processor {
 	extend(MnemonicSubtract, binaryOp(sub))
 	extend(MnemonicMultiply, binaryOp(mul))
 	extend(MnemonicDivide, binaryOp(div))
+	extend(MnemonicIncrement, loadStoreOp(inc))
+	extend(MnemonicIncrementLocal, loadStoreOp(incl))
+	extend(MnemonicDecrement, loadStoreOp(dec))
+	extend(MnemonicDecrementLocal, loadStoreOp(decl))
 	return p
 }
 
@@ -462,4 +466,66 @@ func div(vs []interface{}) (interface{}, error) {
 	}
 
 	return num1 / num2, nil
+}
+
+func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
+	return func(ctx context.Context, imms []interface{}) error {
+		var v interface{}
+		var err error
+		if len(imms) > 0 {
+			v = imms[0]
+		} else {
+			v, err = Pop(ctx)
+		}
+		if err != nil {
+			return err
+		}
+
+		if err := op(ctx, v); err != nil {
+			return err
+		}
+
+		GetPC(ctx).Increment()
+		return nil
+	}
+}
+
+func inc(ctx context.Context, v interface{}) error {
+	h := GetHeap(ctx)
+	k := ToString(v)
+	v, _ = h.Load(k)
+	h.Store(k, ToNumber(v)+1.0)
+	return nil
+}
+
+func incl(ctx context.Context, v interface{}) error {
+	ls, err := GetLocals(ctx)
+	if err != nil {
+		return err
+	}
+
+	k := ToString(v)
+	v, _ = ls.Load(k)
+	ls.Store(k, ToNumber(v)+1.0)
+	return nil
+}
+
+func dec(ctx context.Context, v interface{}) error {
+	h := GetHeap(ctx)
+	k := ToString(v)
+	v, _ = h.Load(k)
+	h.Store(k, ToNumber(v)-1.0)
+	return nil
+}
+
+func decl(ctx context.Context, v interface{}) error {
+	ls, err := GetLocals(ctx)
+	if err != nil {
+		return err
+	}
+
+	k := ToString(v)
+	v, _ = ls.Load(k)
+	ls.Store(k, ToNumber(v)-1.0)
+	return nil
 }

@@ -42,6 +42,10 @@ const (
 	MnemonicSubtract                = "sub"
 	MnemonicMultiply                = "mul"
 	MnemonicDivide                  = "div"
+	MnemonicIncrement               = "inc"
+	MnemonicIncrementLocal          = "incl"
+	MnemonicDecrement               = "dec"
+	MnemonicDecrementLocal          = "decl"
 )
 
 var opcodes = map[Mnemonic]int{}
