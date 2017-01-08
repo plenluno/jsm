@@ -395,6 +395,12 @@ func unaryOp(op func([]interface{}) (interface{}, error)) Process {
 
 func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 	return func(ctx context.Context, imms []interface{}) error {
+		if len(imms) > 0 {
+			if err := Push(ctx, imms[0]); err != nil {
+				return err
+			}
+		}
+
 		if err := Do(ctx, op, 2); err != nil {
 			return err
 		}

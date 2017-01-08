@@ -18,10 +18,8 @@
 }, {
     "mnemonic": "lda"
 }, {
-    "mnemonic": "push",
+    "mnemonic": "sub",
     "immediates": [1]
-}, {
-    "mnemonic": "sub"
 }, {
     "mnemonic": "call",
     "immediates": ["fib", 1]
@@ -31,10 +29,8 @@
 }, {
     "mnemonic": "lda"
 }, {
-    "mnemonic": "push",
+    "mnemonic": "sub",
     "immediates": [2]
-}, {
-    "mnemonic": "sub"
 }, {
     "mnemonic": "call",
     "immediates": ["fib", 1]
