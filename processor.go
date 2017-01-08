@@ -21,9 +21,9 @@ func newProcessor() *processor {
 	extend(MnemonicNop, nop)
 	extend(MnemonicPush, push)
 	extend(MnemonicPop, pop)
-	extend(MnemonicLoad, ld)
-	extend(MnemonicLoadArgument, lda)
-	extend(MnemonicLoadLocal, ldl)
+	extend(MnemonicLoad, loadOp(ld))
+	extend(MnemonicLoadArgument, loadOp(lda))
+	extend(MnemonicLoadLocal, loadOp(ldl))
 	extend(MnemonicStore, st)
 	extend(MnemonicStoreLocal, stl)
 	extend(MnemonicCall, call)
@@ -197,58 +197,50 @@ func pop(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func ld(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
-	if err != nil {
-		return err
-	}
+func loadOp(op func(ctx context.Context, v interface{}) (interface{}, error)) Process {
+	return func(ctx context.Context, imms []interface{}) error {
+		var v interface{}
+		var err error
+		if len(imms) > 0 {
+			v = imms[0]
+		} else {
+			v, err = Pop(ctx)
+		}
+		if err != nil {
+			return err
+		}
 
+		v, err = op(ctx, v)
+		if err != nil {
+			return err
+		}
+
+		if err := Push(ctx, v); err != nil {
+			return err
+		}
+
+		GetPC(ctx).Increment()
+		return nil
+	}
+}
+
+func ld(ctx context.Context, v interface{}) (interface{}, error) {
 	v, _ = GetHeap(ctx).Load(ToString(v))
-	if err := Push(ctx, v); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+	return v, nil
 }
 
-func lda(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
-	if err != nil {
-		return err
-	}
-
-	a, err := GetArgument(ctx, ToInteger(v))
-	if err != nil {
-		return err
-	}
-
-	if err := Push(ctx, a); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+func lda(ctx context.Context, v interface{}) (interface{}, error) {
+	return GetArgument(ctx, ToInteger(v))
 }
 
-func ldl(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
-	if err != nil {
-		return err
-	}
-
+func ldl(ctx context.Context, v interface{}) (interface{}, error) {
 	ls, err := GetLocals(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	v, _ = ls.Load(ToString(v))
-	if err := Push(ctx, v); err != nil {
-		return err
-	}
-
-	GetPC(ctx).Increment()
-	return nil
+	return v, nil
 }
 
 func st(ctx context.Context, imms []interface{}) error {

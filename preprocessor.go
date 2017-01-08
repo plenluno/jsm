@@ -16,6 +16,9 @@ func newPreprocessor() *preprocessor {
 	return &preprocessor{
 		MnemonicPush:           noPreprocessing,
 		MnemonicPop:            atMostOneInteger,
+		MnemonicLoad:           atMostOneString,
+		MnemonicLoadArgument:   atMostOneInteger,
+		MnemonicLoadLocal:      atMostOneString,
 		MnemonicCall:           immediatesOfCall,
 		MnemonicReturn:         atMostOneInteger,
 		MnemonicJump:           oneAddress,
@@ -127,6 +130,17 @@ func atMostOneNumber(ctx context.Context, imms []interface{}) ([]interface{}, er
 		return nil, nil
 	case 1:
 		return []interface{}{ToNumber(imms[0])}, nil
+	default:
+		return nil, preprocessingError(ctx, imms, "too many immediates")
+	}
+}
+
+func atMostOneString(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, nil
+	case 1:
+		return []interface{}{ToString(imms[0])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}

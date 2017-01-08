@@ -1,9 +1,7 @@
 [{
     "label": "fib",
-    "mnemonic": "push",
+    "mnemonic": "lda",
     "immediates": [0]
-}, {
-    "mnemonic": "lda"
 }, {
     "mnemonic": "lt",
     "immediates": [2]
@@ -11,10 +9,8 @@
     "mnemonic": "jt",
     "immediates": ["ret1"]
 }, {
-    "mnemonic": "push",
+    "mnemonic": "lda",
     "immediates": [0]
-}, {
-    "mnemonic": "lda"
 }, {
     "mnemonic": "sub",
     "immediates": [1]
@@ -22,10 +18,8 @@
     "mnemonic": "call",
     "immediates": ["fib", 1]
 }, {
-    "mnemonic": "push",
+    "mnemonic": "lda",
     "immediates": [0]
-}, {
-    "mnemonic": "lda"
 }, {
     "mnemonic": "sub",
     "immediates": [2]
