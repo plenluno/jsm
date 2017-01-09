@@ -188,8 +188,10 @@ func normalize(v interface{}) interface{} {
 			return float64(u)
 		}
 		return u
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
 		return val.Float()
+	case reflect.Float64:
+		return v
 	case reflect.Slice:
 		if val.IsNil() {
 			return nil
