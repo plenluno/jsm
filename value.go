@@ -173,21 +173,26 @@ const maxSafeInteger = 1<<53 - 1
 
 func normalize(v interface{}) interface{} {
 	val := reflect.ValueOf(v)
-	switch val.Kind() {
+	kind := val.Kind()
+	switch kind {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		i := val.Int()
 		if i >= -maxSafeInteger && i <= maxSafeInteger {
 			return float64(i)
 		} else if i >= 0 {
 			return uint64(i)
+		} else if kind != reflect.Int64 {
+			return i
 		}
-		return i
+		return v
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		u := val.Uint()
 		if u <= maxSafeInteger {
 			return float64(u)
+		} else if kind != reflect.Uint64 {
+			return u
 		}
-		return u
+		return v
 	case reflect.Float32:
 		return val.Float()
 	case reflect.Float64:
@@ -217,7 +222,6 @@ func normalize(v interface{}) interface{} {
 		if val.IsNil() {
 			return nil
 		}
-
 		return v
 	default:
 		return v
