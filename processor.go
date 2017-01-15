@@ -24,8 +24,8 @@ func newProcessor() *processor {
 	extend(MnemonicLoad, loadOp(ld))
 	extend(MnemonicLoadArgument, loadOp(lda))
 	extend(MnemonicLoadLocal, loadOp(ldl))
-	extend(MnemonicStore, st)
-	extend(MnemonicStoreLocal, stl)
+	extend(MnemonicStore, storeOp(st))
+	extend(MnemonicStoreLocal, storeOp(stl))
 	extend(MnemonicCall, call)
 	extend(MnemonicReturn, ret)
 	extend(MnemonicJump, jmp)
@@ -201,7 +201,7 @@ func pop(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func loadOp(op func(ctx context.Context, v interface{}) (interface{}, error)) Process {
+func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process {
 	return func(ctx context.Context, imms []interface{}) error {
 		var v interface{}
 		var err error
@@ -247,30 +247,46 @@ func ldl(ctx context.Context, v interface{}) (interface{}, error) {
 	return v, nil
 }
 
-func st(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
+func storeOp(op func(context.Context, []interface{}) error) Process {
+	return func(ctx context.Context, imms []interface{}) error {
+		var vs []interface{}
+		var err error
+		switch len(imms) {
+		case 0:
+			vs, err = MultiPop(ctx, 2)
+		case 1:
+			vs, err = MultiPop(ctx, 1)
+			if err == nil {
+				vs = append(vs, imms[0])
+			}
+		default:
+			vs = imms
+		}
+		if err != nil {
+			return err
+		}
 
+		if err := op(ctx, vs); err != nil {
+			return err
+		}
+
+		GetPC(ctx).Increment()
+		return nil
+	}
+}
+
+func st(ctx context.Context, vs []interface{}) error {
 	GetHeap(ctx).Store(ToString(vs[0]), vs[1])
-	GetPC(ctx).Increment()
 	return nil
 }
 
-func stl(ctx context.Context, imms []interface{}) error {
-	vs, err := MultiPop(ctx, 2)
-	if err != nil {
-		return err
-	}
-
+func stl(ctx context.Context, vs []interface{}) error {
 	ls, err := GetLocals(ctx)
 	if err != nil {
 		return err
 	}
 
 	ls.Store(ToString(vs[0]), vs[1])
-	GetPC(ctx).Increment()
 	return nil
 }
 

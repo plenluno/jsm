@@ -19,6 +19,8 @@ func newPreprocessor() *preprocessor {
 		MnemonicLoad:           atMostOneString,
 		MnemonicLoadArgument:   atMostOneInteger,
 		MnemonicLoadLocal:      atMostOneString,
+		MnemonicStore:          immediatesOfStore,
+		MnemonicStoreLocal:     immediatesOfStore,
 		MnemonicCall:           immediatesOfCall,
 		MnemonicReturn:         atMostOneInteger,
 		MnemonicJump:           oneAddress,
@@ -169,6 +171,19 @@ func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, e
 		return []interface{}{toAddress(ctx, imms[0])}, nil
 	case 2:
 		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+	default:
+		return nil, preprocessingError(ctx, imms, "too many immediates")
+	}
+}
+
+func immediatesOfStore(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+	switch len(imms) {
+	case 0:
+		return nil, nil
+	case 1:
+		return []interface{}{ToString(imms[0])}, nil
+	case 2:
+		return []interface{}{ToString(imms[0]), imms[1]}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
