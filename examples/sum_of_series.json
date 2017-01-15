@@ -1,0 +1,34 @@
+[{
+    "mnemonic": "push",
+    "immediates": [0]
+}, {
+    "mnemonic": "stl",
+    "immediates": ["i", 1]
+}, {
+    "label": "loop",
+    "mnemonic": "ldl",
+    "immediates": ["i"]
+}, {
+    "mnemonic": "lda",
+    "immediates": [0]
+}, {
+    "mnemonic": "le"
+}, {
+    "mnemonic": "jf",
+    "immediates": ["exit"]
+}, {
+    "mnemonic": "ldl",
+    "immediates": ["i"]
+}, {
+    "mnemonic": "add"
+}, {
+    "mnemonic": "incl",
+    "immediates": ["i"]
+}, {
+    "mnemonic": "jmp",
+    "immediates": ["loop"]
+}, {
+    "label": "exit",
+    "mnemonic": "ret",
+    "immediates": [1]
+}]
