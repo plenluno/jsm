@@ -8,8 +8,20 @@ import (
 	"strings"
 )
 
-// ToBool converts the given value to a boolean value.
-func ToBool(v interface{}) bool {
+var trueValue interface{} = true
+var falseValue interface{} = false
+
+// BooleanValue converts bool to interface{}.
+// It returns an already allocated boolean value and avoids new memory allocation.
+func BooleanValue(b bool) interface{} {
+	if b {
+		return trueValue
+	}
+	return falseValue
+}
+
+// ToBoolean converts the given value to a boolean.
+func ToBoolean(v interface{}) bool {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.Invalid:
@@ -65,7 +77,7 @@ func ToNumber(v interface{}) float64 {
 	}
 }
 
-// ToInteger converts the given value to an integer value.
+// ToInteger converts the given value to an integer.
 func ToInteger(v interface{}) int {
 	f := ToNumber(v)
 	if math.IsNaN(f) {
@@ -81,7 +93,7 @@ func ToInteger(v interface{}) int {
 	return int(sign * math.Floor(math.Abs(f)))
 }
 
-// ToString converts the given value to a string value.
+// ToString converts the given value to a string.
 func ToString(v interface{}) string {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestToBool(t *testing.T) {
+func TestToBoolean(t *testing.T) {
 	assert := assert.New(t)
 
 	type st struct {
@@ -20,31 +20,31 @@ func TestToBool(t *testing.T) {
 	var m map[int]int
 	var sl []int
 
-	assert.False(ToBool(nil))
-	assert.False(ToBool(false))
-	assert.False(ToBool(0))
-	assert.False(ToBool(0.0))
-	assert.False(ToBool(math.NaN()))
-	assert.False(ToBool(""))
-	assert.False(ToBool(p))
-	assert.False(ToBool(sp))
-	assert.False(ToBool(m))
-	assert.False(ToBool(sl))
+	assert.False(ToBoolean(nil))
+	assert.False(ToBoolean(false))
+	assert.False(ToBoolean(0))
+	assert.False(ToBoolean(0.0))
+	assert.False(ToBoolean(math.NaN()))
+	assert.False(ToBoolean(""))
+	assert.False(ToBoolean(p))
+	assert.False(ToBoolean(sp))
+	assert.False(ToBoolean(m))
+	assert.False(ToBoolean(sl))
 
 	p = &s.i
 	sp = &s
 	m = map[int]int{}
 	sl = []int{}
 
-	assert.True(ToBool(true))
-	assert.True(ToBool(1))
-	assert.True(ToBool(1.1))
-	assert.True(ToBool("a"))
-	assert.True(ToBool(s))
-	assert.True(ToBool(p))
-	assert.True(ToBool(sp))
-	assert.True(ToBool(m))
-	assert.True(ToBool(sl))
+	assert.True(ToBoolean(true))
+	assert.True(ToBoolean(1))
+	assert.True(ToBoolean(1.1))
+	assert.True(ToBoolean("a"))
+	assert.True(ToBoolean(s))
+	assert.True(ToBoolean(p))
+	assert.True(ToBoolean(sp))
+	assert.True(ToBoolean(m))
+	assert.True(ToBoolean(sl))
 }
 
 func TestToNumber(t *testing.T) {

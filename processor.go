@@ -367,7 +367,7 @@ func jt(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	if ToBool(v) {
+	if ToBoolean(v) {
 		GetPC(ctx).SetValue(addr)
 	} else {
 		GetPC(ctx).Increment()
@@ -386,7 +386,7 @@ func jf(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	if !ToBool(v) {
+	if !ToBoolean(v) {
 		GetPC(ctx).SetValue(addr)
 	} else {
 		GetPC(ctx).Increment()
@@ -422,52 +422,40 @@ func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 	}
 }
 
-var trueValue interface{} = true
-var falseValue interface{} = false
-
-// BoolValue converts bool to interface{}.
-// It returns an already allocated boolean value and avoids new memory allocation.
-func BoolValue(b bool) interface{} {
-	if b {
-		return trueValue
-	}
-	return falseValue
-}
-
 func eq(vs []interface{}) (interface{}, error) {
-	return BoolValue(Equal(vs[0], vs[1])), nil
+	return BooleanValue(Equal(vs[0], vs[1])), nil
 }
 
 func ne(vs []interface{}) (interface{}, error) {
-	return BoolValue(!Equal(vs[0], vs[1])), nil
+	return BooleanValue(!Equal(vs[0], vs[1])), nil
 }
 
 func gt(vs []interface{}) (interface{}, error) {
-	return BoolValue(Less(vs[1], vs[0])), nil
+	return BooleanValue(Less(vs[1], vs[0])), nil
 }
 
 func ge(vs []interface{}) (interface{}, error) {
-	return BoolValue(Less(vs[1], vs[0]) || Equal(vs[1], vs[0])), nil
+	return BooleanValue(Less(vs[1], vs[0]) || Equal(vs[1], vs[0])), nil
 }
 
 func lt(vs []interface{}) (interface{}, error) {
-	return BoolValue(Less(vs[0], vs[1])), nil
+	return BooleanValue(Less(vs[0], vs[1])), nil
 }
 
 func le(vs []interface{}) (interface{}, error) {
-	return BoolValue(Less(vs[0], vs[1]) || Equal(vs[0], vs[1])), nil
+	return BooleanValue(Less(vs[0], vs[1]) || Equal(vs[0], vs[1])), nil
 }
 
 func not(vs []interface{}) (interface{}, error) {
-	return BoolValue(!ToBool(vs[0])), nil
+	return BooleanValue(!ToBoolean(vs[0])), nil
 }
 
 func and(vs []interface{}) (interface{}, error) {
-	return BoolValue(ToBool(vs[0]) && ToBool(vs[1])), nil
+	return BooleanValue(ToBoolean(vs[0]) && ToBoolean(vs[1])), nil
 }
 
 func or(vs []interface{}) (interface{}, error) {
-	return BoolValue(ToBool(vs[0]) || ToBool(vs[1])), nil
+	return BooleanValue(ToBoolean(vs[0]) || ToBoolean(vs[1])), nil
 }
 
 func neg(vs []interface{}) (interface{}, error) {
