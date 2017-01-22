@@ -12,7 +12,7 @@ func TestMachineContext(t *testing.T) {
 	mc := newMachineContext(newMachine())
 	assert.Equal(mc.Value(keyPC), GetPC(mc))
 	assert.Equal(mc.Value(keyHeap), GetHeap(mc))
-	assert.Equal(mc.Value(keyStack), GetStack(mc))
+	assert.Equal(mc.Value(keyStack), getCallStack(mc))
 
 	setResult(mc, 3)
 	assert.Equal(3, getResult(mc))

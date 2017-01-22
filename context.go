@@ -58,24 +58,22 @@ func GetHeap(ctx context.Context) Heap {
 	return (*ctx.(*machineContext))[keyHeap].(*heap)
 }
 
-// GetStack retrieves Stack from Context.
-func GetStack(ctx context.Context) Stack {
+func getCallStack(ctx context.Context) Stack {
 	return (*ctx.(*machineContext))[keyStack].(*stack)
 }
 
-// GetFrame retrieves the current Frame from Context.
-func GetFrame(ctx context.Context) (*Frame, error) {
-	stack := GetStack(ctx)
+func getFrame(ctx context.Context) (*frame, error) {
+	stack := getCallStack(ctx)
 	f, err := stack.Peek()
 	if err != nil {
 		return nil, errors.New("no frame")
 	}
-	return f.(*Frame), nil
+	return f.(*frame), nil
 }
 
 // GetArgument retrieves the argument at the specified position from Context.
 func GetArgument(ctx context.Context, idx int) (interface{}, error) {
-	f, err := GetFrame(ctx)
+	f, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +87,7 @@ func GetArgument(ctx context.Context, idx int) (interface{}, error) {
 
 // GetLocals retrieves the local variables from Context.
 func GetLocals(ctx context.Context) (Heap, error) {
-	f, err := GetFrame(ctx)
+	f, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
 	}

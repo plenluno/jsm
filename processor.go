@@ -86,7 +86,7 @@ func (p processor) process(ctx context.Context, inst *Instruction) error {
 
 // Push pushes a value onto the operand stack.
 func Push(ctx context.Context, v interface{}) error {
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func Push(ctx context.Context, v interface{}) error {
 
 // MultiPush pushes multiple values onto the operand stack.
 func MultiPush(ctx context.Context, vs []interface{}) error {
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func MultiPush(ctx context.Context, vs []interface{}) error {
 
 // Pop pops a value from the operand stack.
 func Pop(ctx context.Context) (interface{}, error) {
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func Pop(ctx context.Context) (interface{}, error) {
 
 // MultiPop pops multiple values from the operand stack.
 func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
 
 // Do executes the given operation against the values at the top of the operand stack.
 func Do(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return err
 	}
@@ -309,10 +309,10 @@ func call(ctx context.Context, imms []interface{}) error {
 	pc := GetPC(ctx)
 	pc.Increment()
 
-	frame := NewFrame()
+	frame := newFrame()
 	frame.Arguments = argv
 	frame.ReturnTo.SetValue(pc.GetValue())
-	GetStack(ctx).Push(frame)
+	getCallStack(ctx).Push(frame)
 
 	pc.SetValue(addr)
 	return nil
@@ -329,13 +329,13 @@ func ret(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	frame, err := GetFrame(ctx)
+	frame, err := getFrame(ctx)
 	if err != nil {
 		return err
 	}
 
 	GetPC(ctx).SetValue(frame.ReturnTo.GetValue())
-	_, err = GetStack(ctx).Pop()
+	_, err = getCallStack(ctx).Pop()
 	if err != nil {
 		return err
 	}

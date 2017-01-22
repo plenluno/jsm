@@ -10,7 +10,7 @@ import (
 func TestFrame(t *testing.T) {
 	assert := assert.New(t)
 
-	f := NewFrame()
+	f := newFrame()
 	f.Arguments = []interface{}{3.5}
 	f.Locals.Store("abc", 123.0)
 	f.Operands.Push(123.0)
@@ -22,7 +22,7 @@ func TestFrame(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(s, string(j))
 
-	var v Frame
+	var v frame
 	err = json.Unmarshal([]byte(s), &v)
 	assert.NoError(err)
 	assert.Equal(f, &v)

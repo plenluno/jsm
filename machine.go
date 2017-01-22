@@ -72,7 +72,7 @@ func (m *machine) load(program []Instruction, args []interface{}) error {
 	m.Clear()
 	m.Program = p
 
-	frame := NewFrame()
+	frame := newFrame()
 	frame.Arguments = args
 	frame.ReturnTo.SetValue(len(p))
 	m.Stack.Push(frame)
