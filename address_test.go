@@ -9,7 +9,7 @@ import (
 func TestAddress(t *testing.T) {
 	assert := assert.New(t)
 
-	a := NewAddress()
+	a := newAddress()
 	assert.Equal(0, a.GetValue())
 
 	a.SetValue(7)

@@ -14,11 +14,6 @@ type Address interface {
 	Increment()
 }
 
-// NewAddress creates a new Address.
-func NewAddress() Address {
-	return newAddress()
-}
-
 type address int
 
 func newAddress() *address {
