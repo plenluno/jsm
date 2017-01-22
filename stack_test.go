@@ -9,7 +9,7 @@ import (
 func TestStackPushPop(t *testing.T) {
 	assert := assert.New(t)
 
-	s := NewStack()
+	s := newStack()
 	_, err := s.Pop()
 	assert.Error(err)
 
@@ -31,15 +31,13 @@ func TestStackPushPop(t *testing.T) {
 func TestStackDo(t *testing.T) {
 	assert := assert.New(t)
 
-	s := NewStack()
+	s := newStack()
 	s.Push(12)
 	s.Push(3)
-	s.Do(func(vs []interface{}) (interface{}, error) {
-		return ToInteger(vs[0]) / ToInteger(vs[1]), nil
-	}, 2)
+	s.Do(div, 2)
 	v, err := s.Pop()
 	assert.NoError(err)
-	assert.Equal(4, v)
+	assert.Equal(4.0, v)
 
 	_, err = s.Pop()
 	assert.Error(err)
@@ -48,7 +46,7 @@ func TestStackDo(t *testing.T) {
 func TestStackPeekClear(t *testing.T) {
 	assert := assert.New(t)
 
-	s := NewStack()
+	s := newStack()
 	s.Push("abc")
 	v, err := s.Peek()
 	assert.NoError(err)
@@ -65,14 +63,14 @@ func TestStackPeekClear(t *testing.T) {
 func TestStackDumpRestore(t *testing.T) {
 	assert := assert.New(t)
 
-	s1 := NewStack()
+	s1 := newStack()
 	s1.Push("abc")
 	s1.Push(123)
 	d1, err := s1.Dump()
 	assert.NoError(err)
 	assert.Equal("[\"abc\",123]", string(d1))
 
-	s2 := NewStack()
+	s2 := newStack()
 	d2, err := s2.Dump()
 	assert.NoError(err)
 	assert.Equal("[]", string(d2))

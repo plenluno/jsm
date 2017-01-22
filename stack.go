@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Stack is the stack of a JSM.
+// Stack is a stack of interface{}.
 type Stack interface {
 	Clearable
 	Restorable
@@ -30,11 +30,6 @@ type Stack interface {
 
 	// Do executes the given operation against the values at the top of the stack.
 	Do(op func([]interface{}) (interface{}, error), arity int) error
-}
-
-// NewStack creates a new Stack.
-func NewStack() Stack {
-	return newStack()
 }
 
 type stack []interface{}
