@@ -86,34 +86,34 @@ func (p processor) process(ctx context.Context, inst *Instruction) error {
 
 // Push pushes a value onto the operand stack.
 func Push(ctx context.Context, v interface{}) error {
-	frame, err := getFrame(ctx)
+	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
 	}
 
-	frame.Operands.Push(v)
+	stack.Push(v)
 	return nil
 }
 
 // MultiPush pushes multiple values onto the operand stack.
 func MultiPush(ctx context.Context, vs []interface{}) error {
-	frame, err := getFrame(ctx)
+	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
 	}
 
-	frame.Operands.MultiPush(vs)
+	stack.MultiPush(vs)
 	return nil
 }
 
 // Pop pops a value from the operand stack.
 func Pop(ctx context.Context) (interface{}, error) {
-	frame, err := getFrame(ctx)
+	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := frame.Operands.Pop()
+	v, err := stack.Pop()
 	if err != nil {
 		return nil, errors.New("no operand")
 	}
@@ -122,12 +122,12 @@ func Pop(ctx context.Context) (interface{}, error) {
 
 // MultiPop pops multiple values from the operand stack.
 func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
-	frame, err := getFrame(ctx)
+	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	operands, err := frame.Operands.MultiPop(n)
+	operands, err := stack.MultiPop(n)
 	if err != nil {
 		return nil, errors.New("too few operands")
 	}
@@ -136,12 +136,12 @@ func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
 
 // Do executes the given operation against the values at the top of the operand stack.
 func Do(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
-	frame, err := getFrame(ctx)
+	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err := frame.Operands.Do(op, arity); err != nil {
+	if err := stack.Do(op, arity); err != nil {
 		return errors.New("too few operands")
 	}
 	return nil

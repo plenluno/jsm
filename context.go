@@ -94,6 +94,15 @@ func GetLocalHeap(ctx context.Context) (Heap, error) {
 	return f.Locals, nil
 }
 
+// GetOperandStack retrieves the current operand stack.
+func GetOperandStack(ctx context.Context) (Stack, error) {
+	f, err := getFrame(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return f.Operands, nil
+}
+
 func getResult(ctx context.Context) interface{} {
 	return *(*ctx.(*machineContext))[keyResult].(*interface{})
 }
