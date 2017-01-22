@@ -229,7 +229,7 @@ func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process 
 }
 
 func ld(ctx context.Context, v interface{}) (interface{}, error) {
-	v, _ = GetHeap(ctx).Load(ToString(v))
+	v, _ = GetGlobalHeap(ctx).Load(ToString(v))
 	return v, nil
 }
 
@@ -238,12 +238,12 @@ func lda(ctx context.Context, v interface{}) (interface{}, error) {
 }
 
 func ldl(ctx context.Context, v interface{}) (interface{}, error) {
-	ls, err := GetLocals(ctx)
+	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	v, _ = ls.Load(ToString(v))
+	v, _ = lh.Load(ToString(v))
 	return v, nil
 }
 
@@ -276,17 +276,17 @@ func storeOp(op func(context.Context, []interface{}) error) Process {
 }
 
 func st(ctx context.Context, vs []interface{}) error {
-	GetHeap(ctx).Store(ToString(vs[0]), vs[1])
+	GetGlobalHeap(ctx).Store(ToString(vs[0]), vs[1])
 	return nil
 }
 
 func stl(ctx context.Context, vs []interface{}) error {
-	ls, err := GetLocals(ctx)
+	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err
 	}
 
-	ls.Store(ToString(vs[0]), vs[1])
+	lh.Store(ToString(vs[0]), vs[1])
 	return nil
 }
 
@@ -507,7 +507,7 @@ func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
 }
 
 func inc(ctx context.Context, v interface{}) error {
-	h := GetHeap(ctx)
+	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
 	h.Store(k, ToNumber(v)+1.0)
@@ -515,19 +515,19 @@ func inc(ctx context.Context, v interface{}) error {
 }
 
 func incl(ctx context.Context, v interface{}) error {
-	ls, err := GetLocals(ctx)
+	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err
 	}
 
 	k := ToString(v)
-	v, _ = ls.Load(k)
-	ls.Store(k, ToNumber(v)+1.0)
+	v, _ = lh.Load(k)
+	lh.Store(k, ToNumber(v)+1.0)
 	return nil
 }
 
 func dec(ctx context.Context, v interface{}) error {
-	h := GetHeap(ctx)
+	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
 	h.Store(k, ToNumber(v)-1.0)
@@ -535,13 +535,13 @@ func dec(ctx context.Context, v interface{}) error {
 }
 
 func decl(ctx context.Context, v interface{}) error {
-	ls, err := GetLocals(ctx)
+	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err
 	}
 
 	k := ToString(v)
-	v, _ = ls.Load(k)
-	ls.Store(k, ToNumber(v)-1.0)
+	v, _ = lh.Load(k)
+	lh.Store(k, ToNumber(v)-1.0)
 	return nil
 }

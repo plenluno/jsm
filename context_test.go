@@ -11,7 +11,7 @@ func TestMachineContext(t *testing.T) {
 
 	mc := newMachineContext(newMachine())
 	assert.Equal(mc.Value(keyPC), GetPC(mc))
-	assert.Equal(mc.Value(keyHeap), GetHeap(mc))
+	assert.Equal(mc.Value(keyHeap), GetGlobalHeap(mc))
 	assert.Equal(mc.Value(keyStack), getCallStack(mc))
 
 	setResult(mc, 3)

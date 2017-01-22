@@ -48,13 +48,13 @@ func newMachineContext(m *machine) context.Context {
 	}
 }
 
-// GetPC retrieves the program counter from Context.
+// GetPC retrieves the program counter.
 func GetPC(ctx context.Context) Address {
 	return (*ctx.(*machineContext))[keyPC].(*address)
 }
 
-// GetHeap retrieves Heap from Context.
-func GetHeap(ctx context.Context) Heap {
+// GetGlobalHeap retrieves the global heap.
+func GetGlobalHeap(ctx context.Context) Heap {
 	return (*ctx.(*machineContext))[keyHeap].(*heap)
 }
 
@@ -71,7 +71,7 @@ func getFrame(ctx context.Context) (*frame, error) {
 	return f.(*frame), nil
 }
 
-// GetArgument retrieves the argument at the specified position from Context.
+// GetArgument retrieves the argument at the specified position.
 func GetArgument(ctx context.Context, idx int) (interface{}, error) {
 	f, err := getFrame(ctx)
 	if err != nil {
@@ -85,8 +85,8 @@ func GetArgument(ctx context.Context, idx int) (interface{}, error) {
 	return f.Arguments[idx], nil
 }
 
-// GetLocals retrieves the local variables from Context.
-func GetLocals(ctx context.Context) (Heap, error) {
+// GetLocalHeap retrieves the current local heap.
+func GetLocalHeap(ctx context.Context) (Heap, error) {
 	f, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
@@ -140,12 +140,12 @@ func newProgramContext() context.Context {
 	}
 }
 
-// GetLabels retrieves the program labels from Context.
+// GetLabels retrieves the program labels.
 func GetLabels(ctx context.Context) map[string]int {
 	return (*ctx.(*programContext))[keyLabels].(map[string]int)
 }
 
-// GetMnemonic retrieves the currently preprocessed mnemonic from Context.
+// GetMnemonic retrieves the currently preprocessed mnemonic.
 func GetMnemonic(ctx context.Context) Mnemonic {
 	return *(*ctx.(*programContext))[keyMnemonic].(*Mnemonic)
 }
