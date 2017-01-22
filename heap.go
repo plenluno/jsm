@@ -6,18 +6,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Heap is the heap of a JSM.
+// Heap is a heap in JSM.
 type Heap interface {
 	Clearable
 	Restorable
 
+	// Load returns the value associated with the specified key,
+	// or an error if the key has no associated value.
 	Load(k string) (interface{}, error)
-	Store(k string, v interface{})
-}
 
-// NewHeap creates a new Heap.
-func NewHeap() Heap {
-	return newHeap()
+	// Store stores the specified value under the specified key.
+	Store(k string, v interface{})
 }
 
 type heap map[string]interface{}

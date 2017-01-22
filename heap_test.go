@@ -9,7 +9,7 @@ import (
 func TestHeapLoadStore(t *testing.T) {
 	assert := assert.New(t)
 
-	h := NewHeap()
+	h := newHeap()
 	v, err := h.Load("abc")
 	assert.Error(err)
 	assert.Nil(v)
@@ -28,7 +28,7 @@ func TestHeapLoadStore(t *testing.T) {
 func TestHeapClear(t *testing.T) {
 	assert := assert.New(t)
 
-	h := NewHeap()
+	h := newHeap()
 	h.Store("xyz", []int{1, 2, 3})
 	h.Clear()
 	d, err := h.Dump()
@@ -39,13 +39,13 @@ func TestHeapClear(t *testing.T) {
 func TestHeapDumpRestore(t *testing.T) {
 	assert := assert.New(t)
 
-	h1 := NewHeap()
+	h1 := newHeap()
 	h1.Store("xyz", []int{1, 2, 3})
 	d1, err := h1.Dump()
 	assert.NoError(err)
 	assert.Equal("{\"xyz\":[1,2,3]}", string(d1))
 
-	h2 := NewHeap()
+	h2 := newHeap()
 	d2, err := h2.Dump()
 	assert.NoError(err)
 	assert.Equal("{}", string(d2))
