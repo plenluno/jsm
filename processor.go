@@ -84,8 +84,7 @@ func (p processor) process(ctx context.Context, inst *Instruction) error {
 	return p[oc](ctx, inst.Immediates)
 }
 
-// Push pushes a value onto the operand stack.
-func Push(ctx context.Context, v interface{}) error {
+func doPush(ctx context.Context, v interface{}) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -95,8 +94,7 @@ func Push(ctx context.Context, v interface{}) error {
 	return nil
 }
 
-// MultiPush pushes multiple values onto the operand stack.
-func MultiPush(ctx context.Context, vs []interface{}) error {
+func doMultiPush(ctx context.Context, vs []interface{}) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -106,8 +104,7 @@ func MultiPush(ctx context.Context, vs []interface{}) error {
 	return nil
 }
 
-// Pop pops a value from the operand stack.
-func Pop(ctx context.Context) (interface{}, error) {
+func doPop(ctx context.Context) (interface{}, error) {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
@@ -120,8 +117,7 @@ func Pop(ctx context.Context) (interface{}, error) {
 	return v, nil
 }
 
-// MultiPop pops multiple values from the operand stack.
-func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
+func doMultiPop(ctx context.Context, n int) ([]interface{}, error) {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
@@ -134,8 +130,7 @@ func MultiPop(ctx context.Context, n int) ([]interface{}, error) {
 	return operands, nil
 }
 
-// Do executes the given operation against the values at the top of the operand stack.
-func Do(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
+func doOp(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -179,7 +174,7 @@ func nop(ctx context.Context, imms []interface{}) error {
 }
 
 func push(ctx context.Context, imms []interface{}) error {
-	if err := MultiPush(ctx, imms); err != nil {
+	if err := doMultiPush(ctx, imms); err != nil {
 		return err
 	}
 
@@ -193,7 +188,7 @@ func pop(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	if _, err := MultiPop(ctx, n); err != nil {
+	if _, err := doMultiPop(ctx, n); err != nil {
 		return err
 	}
 
@@ -208,7 +203,7 @@ func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process 
 		if len(imms) > 0 {
 			v = imms[0]
 		} else {
-			v, err = Pop(ctx)
+			v, err = doPop(ctx)
 		}
 		if err != nil {
 			return err
@@ -219,7 +214,7 @@ func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process 
 			return err
 		}
 
-		if err := Push(ctx, v); err != nil {
+		if err := doPush(ctx, v); err != nil {
 			return err
 		}
 
@@ -253,9 +248,9 @@ func storeOp(op func(context.Context, []interface{}) error) Process {
 		var err error
 		switch len(imms) {
 		case 0:
-			vs, err = MultiPop(ctx, 2)
+			vs, err = doMultiPop(ctx, 2)
 		case 1:
-			vs, err = MultiPop(ctx, 1)
+			vs, err = doMultiPop(ctx, 1)
 			if err == nil {
 				vs = append(vs, imms[0])
 			}
@@ -301,7 +296,7 @@ func call(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	argv, err := MultiPop(ctx, argc)
+	argv, err := doMultiPop(ctx, argc)
 	if err != nil {
 		return nil
 	}
@@ -324,7 +319,7 @@ func ret(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	res, err := MultiPop(ctx, n)
+	res, err := doMultiPop(ctx, n)
 	if err != nil {
 		return err
 	}
@@ -340,7 +335,7 @@ func ret(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	if err := MultiPush(ctx, res); err != nil {
+	if err := doMultiPush(ctx, res); err != nil {
 		setResult(ctx, res)
 	}
 	return nil
@@ -362,7 +357,7 @@ func jt(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	v, err := Pop(ctx)
+	v, err := doPop(ctx)
 	if err != nil {
 		return err
 	}
@@ -381,7 +376,7 @@ func jf(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	v, err := Pop(ctx)
+	v, err := doPop(ctx)
 	if err != nil {
 		return err
 	}
@@ -396,7 +391,7 @@ func jf(ctx context.Context, imms []interface{}) error {
 
 func unaryOp(op func([]interface{}) (interface{}, error)) Process {
 	return func(ctx context.Context, imms []interface{}) error {
-		if err := Do(ctx, op, 1); err != nil {
+		if err := doOp(ctx, op, 1); err != nil {
 			return err
 		}
 
@@ -408,12 +403,12 @@ func unaryOp(op func([]interface{}) (interface{}, error)) Process {
 func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 	return func(ctx context.Context, imms []interface{}) error {
 		if len(imms) > 0 {
-			if err := Push(ctx, imms[0]); err != nil {
+			if err := doPush(ctx, imms[0]); err != nil {
 				return err
 			}
 		}
 
-		if err := Do(ctx, op, 2); err != nil {
+		if err := doOp(ctx, op, 2); err != nil {
 			return err
 		}
 
@@ -491,7 +486,7 @@ func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
 		if len(imms) > 0 {
 			v = imms[0]
 		} else {
-			v, err = Pop(ctx)
+			v, err = doPop(ctx)
 		}
 		if err != nil {
 			return err

@@ -57,12 +57,12 @@ func fibonacci(n int) int {
 }
 
 func fib(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
+	v, err := doPop(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err := Push(ctx, fibonacci(ToInteger(v))); err != nil {
+	if err := doPush(ctx, fibonacci(ToInteger(v))); err != nil {
 		return err
 	}
 
@@ -96,12 +96,12 @@ func sumOfSeries(n int) int {
 }
 
 func sum(ctx context.Context, imms []interface{}) error {
-	v, err := Pop(ctx)
+	v, err := doPop(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err := Push(ctx, sumOfSeries(ToInteger(v))); err != nil {
+	if err := doPush(ctx, sumOfSeries(ToInteger(v))); err != nil {
 		return err
 	}
 
