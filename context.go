@@ -48,9 +48,9 @@ func newMachineContext(m *machine) context.Context {
 	}
 }
 
-// GetPC retrieves the program counter.
-func GetPC(ctx context.Context) Address {
-	return (*ctx.(*machineContext))[keyPC].(*address)
+// GetProgramCounter retrieves the program counter.
+func GetProgramCounter(ctx context.Context) ProgramCounter {
+	return (*ctx.(*machineContext))[keyPC].(*programCounter)
 }
 
 // GetGlobalHeap retrieves the global heap.

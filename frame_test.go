@@ -14,7 +14,7 @@ func TestFrame(t *testing.T) {
 	f.Arguments = []interface{}{3.5}
 	f.Locals.Store("abc", 123.0)
 	f.Operands.Push(123.0)
-	f.ReturnTo.SetValue(16)
+	f.ReturnTo = 16
 
 	s := "{\"arguments\":[3.5],\"locals\":{\"abc\":123},\"operands\":[123],\"returnTo\":16}"
 

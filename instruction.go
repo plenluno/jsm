@@ -1,6 +1,6 @@
 package jsm
 
-// Instruction is a instruction for JSM.
+// Instruction is an instruction of JSM.
 type Instruction struct {
 	Label      string        `json:"label,omitempty"`
 	Mnemonic   Mnemonic      `json:"mnemonic"`
@@ -10,7 +10,7 @@ type Instruction struct {
 	opcode int
 }
 
-// Mnemonic is a instruction mnemonic for JSM.
+// Mnemonic is an instruction mnemonic of JSM.
 type Mnemonic string
 
 // These constants are instruction mnemonics.

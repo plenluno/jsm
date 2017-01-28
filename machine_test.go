@@ -66,7 +66,7 @@ func fib(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).Increment()
+	GetProgramCounter(ctx).Increment()
 	return nil
 }
 
@@ -105,7 +105,7 @@ func sum(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).Increment()
+	GetProgramCounter(ctx).Increment()
 	return nil
 }
 

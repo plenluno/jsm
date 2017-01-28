@@ -174,7 +174,7 @@ func getCount(vs []interface{}, idx, min int) (int, error) {
 }
 
 func nop(ctx context.Context, imms []interface{}) error {
-	GetPC(ctx).Increment()
+	GetProgramCounter(ctx).Increment()
 	return nil
 }
 
@@ -183,7 +183,7 @@ func push(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).Increment()
+	GetProgramCounter(ctx).Increment()
 	return nil
 }
 
@@ -197,7 +197,7 @@ func pop(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).Increment()
+	GetProgramCounter(ctx).Increment()
 	return nil
 }
 
@@ -223,7 +223,7 @@ func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process 
 			return err
 		}
 
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 		return nil
 	}
 }
@@ -270,7 +270,7 @@ func storeOp(op func(context.Context, []interface{}) error) Process {
 			return err
 		}
 
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 		return nil
 	}
 }
@@ -306,15 +306,15 @@ func call(ctx context.Context, imms []interface{}) error {
 		return nil
 	}
 
-	pc := GetPC(ctx)
+	pc := GetProgramCounter(ctx)
 	pc.Increment()
 
 	frame := newFrame()
 	frame.Arguments = argv
-	frame.ReturnTo.SetValue(pc.GetValue())
+	frame.ReturnTo = pc.Index()
 	getCallStack(ctx).Push(frame)
 
-	pc.SetValue(addr)
+	pc.SetIndex(addr)
 	return nil
 }
 
@@ -334,7 +334,7 @@ func ret(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).SetValue(frame.ReturnTo.GetValue())
+	GetProgramCounter(ctx).SetIndex(frame.ReturnTo)
 	_, err = getCallStack(ctx).Pop()
 	if err != nil {
 		return err
@@ -352,7 +352,7 @@ func jmp(ctx context.Context, imms []interface{}) error {
 		return err
 	}
 
-	GetPC(ctx).SetValue(addr)
+	GetProgramCounter(ctx).SetIndex(addr)
 	return nil
 }
 
@@ -368,9 +368,9 @@ func jt(ctx context.Context, imms []interface{}) error {
 	}
 
 	if ToBoolean(v) {
-		GetPC(ctx).SetValue(addr)
+		GetProgramCounter(ctx).SetIndex(addr)
 	} else {
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 	}
 	return nil
 }
@@ -387,9 +387,9 @@ func jf(ctx context.Context, imms []interface{}) error {
 	}
 
 	if !ToBoolean(v) {
-		GetPC(ctx).SetValue(addr)
+		GetProgramCounter(ctx).SetIndex(addr)
 	} else {
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 	}
 	return nil
 }
@@ -400,7 +400,7 @@ func unaryOp(op func([]interface{}) (interface{}, error)) Process {
 			return err
 		}
 
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 		return nil
 	}
 }
@@ -417,7 +417,7 @@ func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 			return err
 		}
 
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 		return nil
 	}
 }
@@ -501,7 +501,7 @@ func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
 			return err
 		}
 
-		GetPC(ctx).Increment()
+		GetProgramCounter(ctx).Increment()
 		return nil
 	}
 }

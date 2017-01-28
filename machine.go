@@ -26,10 +26,10 @@ type machine struct {
 	processor    *processor
 	preprocessor *preprocessor
 
-	Program []Instruction `json:"program"`
-	PC      *address      `json:"pc"`
-	Heap    *heap         `json:"heap"`
-	Stack   *stack        `json:"stack"`
+	Program []Instruction   `json:"program"`
+	PC      *programCounter `json:"pc"`
+	Heap    *heap           `json:"heap"`
+	Stack   *stack          `json:"stack"`
 
 	context context.Context
 }
@@ -38,7 +38,7 @@ func newMachine() *machine {
 	m := new(machine)
 	m.processor = newProcessor()
 	m.preprocessor = newPreprocessor()
-	m.PC = newAddress()
+	m.PC = newProgramCounter()
 	m.Heap = newHeap()
 	m.Stack = newStack()
 	m.context = newMachineContext(m)
@@ -74,18 +74,18 @@ func (m *machine) load(program []Instruction, args []interface{}) error {
 
 	frame := newFrame()
 	frame.Arguments = args
-	frame.ReturnTo.SetValue(len(p))
+	frame.ReturnTo = len(p)
 	m.Stack.Push(frame)
 	return nil
 }
 
 func (m *machine) inProgress() bool {
-	pc := m.PC.GetValue()
-	return pc >= 0 && pc < len(m.Program)
+	idx := m.PC.Index()
+	return idx >= 0 && idx < len(m.Program)
 }
 
 func (m *machine) step() error {
-	return m.processor.process(m.context, &m.Program[m.PC.GetValue()])
+	return m.processor.process(m.context, &m.Program[m.PC.Index()])
 }
 
 func (m *machine) Extend(mnemonic Mnemonic, process Process, preprocess Preprocess) error {
