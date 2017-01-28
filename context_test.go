@@ -16,7 +16,7 @@ func TestMachineContext(t *testing.T) {
 
 	setResult(mc, 3)
 	assert.Equal(3, getResult(mc))
-	assert.Equal(3, *mc.Value(keyResult).(*interface{}))
+	assert.Equal(3, *mc.Value(keyResult).(*Value))
 }
 
 func TestProgramContext(t *testing.T) {

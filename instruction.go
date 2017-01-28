@@ -2,10 +2,10 @@ package jsm
 
 // Instruction is an instruction of JSM.
 type Instruction struct {
-	Label      string        `json:"label,omitempty"`
-	Mnemonic   Mnemonic      `json:"mnemonic"`
-	Immediates []interface{} `json:"immediates,omitempty"`
-	Comment    string        `json:"comment,omitempty"`
+	Label      string   `json:"label,omitempty"`
+	Mnemonic   Mnemonic `json:"mnemonic"`
+	Immediates []Value  `json:"immediates,omitempty"`
+	Comment    string   `json:"comment,omitempty"`
 
 	opcode int
 }

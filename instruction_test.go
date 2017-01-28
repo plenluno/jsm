@@ -11,7 +11,7 @@ func TestInstruction(t *testing.T) {
 	assert := assert.New(t)
 
 	p := []Instruction{
-		{Mnemonic: MnemonicPush, Immediates: []interface{}{3.0}},
+		{Mnemonic: MnemonicPush, Immediates: []Value{3.0}},
 		{Mnemonic: MnemonicPop},
 	}
 	s := "[{\"mnemonic\":\"push\",\"immediates\":[3]},{\"mnemonic\":\"pop\"}]"

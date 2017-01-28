@@ -44,7 +44,7 @@ func newMachineContext(m *machine) context.Context {
 		keyPC:     m.PC,
 		keyHeap:   m.Heap,
 		keyStack:  m.Stack,
-		keyResult: new(interface{}),
+		keyResult: new(Value),
 	}
 }
 
@@ -72,7 +72,7 @@ func getFrame(ctx context.Context) (*frame, error) {
 }
 
 // GetArgument retrieves the argument at the specified position.
-func GetArgument(ctx context.Context, idx int) (interface{}, error) {
+func GetArgument(ctx context.Context, idx int) (Value, error) {
 	f, err := getFrame(ctx)
 	if err != nil {
 		return nil, err
@@ -103,12 +103,12 @@ func GetOperandStack(ctx context.Context) (Stack, error) {
 	return f.Operands, nil
 }
 
-func getResult(ctx context.Context) interface{} {
-	return *(*ctx.(*machineContext))[keyResult].(*interface{})
+func getResult(ctx context.Context) Value {
+	return *(*ctx.(*machineContext))[keyResult].(*Value)
 }
 
-func setResult(ctx context.Context, res interface{}) {
-	r := (*ctx.(*machineContext))[keyResult].(*interface{})
+func setResult(ctx context.Context, res Value) {
+	r := (*ctx.(*machineContext))[keyResult].(*Value)
 	*r = res
 }
 

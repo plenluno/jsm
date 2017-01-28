@@ -7,7 +7,7 @@ import (
 )
 
 // Process executes operations on JSM.
-type Process func(ctx context.Context, imms []interface{}) error
+type Process func(ctx context.Context, imms []Value) error
 
 type processor []Process
 
@@ -84,7 +84,7 @@ func (p processor) process(ctx context.Context, inst *Instruction) error {
 	return p[oc](ctx, inst.Immediates)
 }
 
-func doPush(ctx context.Context, v interface{}) error {
+func doPush(ctx context.Context, v Value) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func doPush(ctx context.Context, v interface{}) error {
 	return nil
 }
 
-func doMultiPush(ctx context.Context, vs []interface{}) error {
+func doMultiPush(ctx context.Context, vs []Value) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -104,7 +104,7 @@ func doMultiPush(ctx context.Context, vs []interface{}) error {
 	return nil
 }
 
-func doPop(ctx context.Context) (interface{}, error) {
+func doPop(ctx context.Context) (Value, error) {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func doPop(ctx context.Context) (interface{}, error) {
 	return v, nil
 }
 
-func doMultiPop(ctx context.Context, n int) ([]interface{}, error) {
+func doMultiPop(ctx context.Context, n int) ([]Value, error) {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func doMultiPop(ctx context.Context, n int) ([]interface{}, error) {
 	return operands, nil
 }
 
-func doOp(ctx context.Context, op func([]interface{}) (interface{}, error), arity int) error {
+func doOp(ctx context.Context, op func([]Value) (Value, error), arity int) error {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func doOp(ctx context.Context, op func([]interface{}) (interface{}, error), arit
 	return nil
 }
 
-func getAddress(vs []interface{}, idx int) (int, error) {
+func getAddress(vs []Value, idx int) (int, error) {
 	if len(vs) <= idx {
 		return -1, errors.New("no address")
 	}
@@ -155,7 +155,7 @@ func getAddress(vs []interface{}, idx int) (int, error) {
 	return addr, nil
 }
 
-func getCount(vs []interface{}, idx, min int) (int, error) {
+func getCount(vs []Value, idx, min int) (int, error) {
 	if len(vs) <= idx {
 		return min, nil
 	}
@@ -168,12 +168,12 @@ func getCount(vs []interface{}, idx, min int) (int, error) {
 	return count, nil
 }
 
-func nop(ctx context.Context, imms []interface{}) error {
+func nop(ctx context.Context, imms []Value) error {
 	GetProgramCounter(ctx).Increment()
 	return nil
 }
 
-func push(ctx context.Context, imms []interface{}) error {
+func push(ctx context.Context, imms []Value) error {
 	if err := doMultiPush(ctx, imms); err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func push(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func pop(ctx context.Context, imms []interface{}) error {
+func pop(ctx context.Context, imms []Value) error {
 	n, err := getCount(imms, 0, 1)
 	if err != nil {
 		return err
@@ -196,9 +196,9 @@ func pop(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process {
-	return func(ctx context.Context, imms []interface{}) error {
-		var v interface{}
+func loadOp(op func(context.Context, Value) (Value, error)) Process {
+	return func(ctx context.Context, imms []Value) error {
+		var v Value
 		var err error
 		if len(imms) > 0 {
 			v = imms[0]
@@ -223,16 +223,16 @@ func loadOp(op func(context.Context, interface{}) (interface{}, error)) Process 
 	}
 }
 
-func ld(ctx context.Context, v interface{}) (interface{}, error) {
+func ld(ctx context.Context, v Value) (Value, error) {
 	v, _ = GetGlobalHeap(ctx).Load(ToString(v))
 	return v, nil
 }
 
-func lda(ctx context.Context, v interface{}) (interface{}, error) {
+func lda(ctx context.Context, v Value) (Value, error) {
 	return GetArgument(ctx, ToInteger(v))
 }
 
-func ldl(ctx context.Context, v interface{}) (interface{}, error) {
+func ldl(ctx context.Context, v Value) (Value, error) {
 	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return nil, err
@@ -242,9 +242,9 @@ func ldl(ctx context.Context, v interface{}) (interface{}, error) {
 	return v, nil
 }
 
-func storeOp(op func(context.Context, []interface{}) error) Process {
-	return func(ctx context.Context, imms []interface{}) error {
-		var vs []interface{}
+func storeOp(op func(context.Context, []Value) error) Process {
+	return func(ctx context.Context, imms []Value) error {
+		var vs []Value
 		var err error
 		switch len(imms) {
 		case 0:
@@ -270,12 +270,12 @@ func storeOp(op func(context.Context, []interface{}) error) Process {
 	}
 }
 
-func st(ctx context.Context, vs []interface{}) error {
+func st(ctx context.Context, vs []Value) error {
 	GetGlobalHeap(ctx).Store(ToString(vs[0]), vs[1])
 	return nil
 }
 
-func stl(ctx context.Context, vs []interface{}) error {
+func stl(ctx context.Context, vs []Value) error {
 	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err
@@ -285,7 +285,7 @@ func stl(ctx context.Context, vs []interface{}) error {
 	return nil
 }
 
-func call(ctx context.Context, imms []interface{}) error {
+func call(ctx context.Context, imms []Value) error {
 	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
@@ -313,7 +313,7 @@ func call(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func ret(ctx context.Context, imms []interface{}) error {
+func ret(ctx context.Context, imms []Value) error {
 	n, err := getCount(imms, 0, 0)
 	if err != nil {
 		return err
@@ -341,7 +341,7 @@ func ret(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func jmp(ctx context.Context, imms []interface{}) error {
+func jmp(ctx context.Context, imms []Value) error {
 	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
@@ -351,7 +351,7 @@ func jmp(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func jt(ctx context.Context, imms []interface{}) error {
+func jt(ctx context.Context, imms []Value) error {
 	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
@@ -370,7 +370,7 @@ func jt(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func jf(ctx context.Context, imms []interface{}) error {
+func jf(ctx context.Context, imms []Value) error {
 	addr, err := getAddress(imms, 0)
 	if err != nil {
 		return err
@@ -389,8 +389,8 @@ func jf(ctx context.Context, imms []interface{}) error {
 	return nil
 }
 
-func unaryOp(op func([]interface{}) (interface{}, error)) Process {
-	return func(ctx context.Context, imms []interface{}) error {
+func unaryOp(op func([]Value) (Value, error)) Process {
+	return func(ctx context.Context, imms []Value) error {
 		if err := doOp(ctx, op, 1); err != nil {
 			return err
 		}
@@ -400,8 +400,8 @@ func unaryOp(op func([]interface{}) (interface{}, error)) Process {
 	}
 }
 
-func binaryOp(op func([]interface{}) (interface{}, error)) Process {
-	return func(ctx context.Context, imms []interface{}) error {
+func binaryOp(op func([]Value) (Value, error)) Process {
+	return func(ctx context.Context, imms []Value) error {
 		if len(imms) > 0 {
 			if err := doPush(ctx, imms[0]); err != nil {
 				return err
@@ -417,59 +417,59 @@ func binaryOp(op func([]interface{}) (interface{}, error)) Process {
 	}
 }
 
-func eq(vs []interface{}) (interface{}, error) {
+func eq(vs []Value) (Value, error) {
 	return BooleanValue(Equal(vs[0], vs[1])), nil
 }
 
-func ne(vs []interface{}) (interface{}, error) {
+func ne(vs []Value) (Value, error) {
 	return BooleanValue(!Equal(vs[0], vs[1])), nil
 }
 
-func gt(vs []interface{}) (interface{}, error) {
+func gt(vs []Value) (Value, error) {
 	return BooleanValue(Less(vs[1], vs[0])), nil
 }
 
-func ge(vs []interface{}) (interface{}, error) {
+func ge(vs []Value) (Value, error) {
 	return BooleanValue(Less(vs[1], vs[0]) || Equal(vs[1], vs[0])), nil
 }
 
-func lt(vs []interface{}) (interface{}, error) {
+func lt(vs []Value) (Value, error) {
 	return BooleanValue(Less(vs[0], vs[1])), nil
 }
 
-func le(vs []interface{}) (interface{}, error) {
+func le(vs []Value) (Value, error) {
 	return BooleanValue(Less(vs[0], vs[1]) || Equal(vs[0], vs[1])), nil
 }
 
-func not(vs []interface{}) (interface{}, error) {
+func not(vs []Value) (Value, error) {
 	return BooleanValue(!ToBoolean(vs[0])), nil
 }
 
-func and(vs []interface{}) (interface{}, error) {
+func and(vs []Value) (Value, error) {
 	return BooleanValue(ToBoolean(vs[0]) && ToBoolean(vs[1])), nil
 }
 
-func or(vs []interface{}) (interface{}, error) {
+func or(vs []Value) (Value, error) {
 	return BooleanValue(ToBoolean(vs[0]) || ToBoolean(vs[1])), nil
 }
 
-func neg(vs []interface{}) (interface{}, error) {
+func neg(vs []Value) (Value, error) {
 	return -ToNumber(vs[0]), nil
 }
 
-func add(vs []interface{}) (interface{}, error) {
+func add(vs []Value) (Value, error) {
 	return ToNumber(vs[0]) + ToNumber(vs[1]), nil
 }
 
-func sub(vs []interface{}) (interface{}, error) {
+func sub(vs []Value) (Value, error) {
 	return ToNumber(vs[0]) - ToNumber(vs[1]), nil
 }
 
-func mul(vs []interface{}) (interface{}, error) {
+func mul(vs []Value) (Value, error) {
 	return ToNumber(vs[0]) * ToNumber(vs[1]), nil
 }
 
-func div(vs []interface{}) (interface{}, error) {
+func div(vs []Value) (Value, error) {
 	num1 := ToNumber(vs[0])
 	num2 := ToNumber(vs[1])
 	if num2 == 0.0 {
@@ -479,9 +479,9 @@ func div(vs []interface{}) (interface{}, error) {
 	return num1 / num2, nil
 }
 
-func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
-	return func(ctx context.Context, imms []interface{}) error {
-		var v interface{}
+func loadStoreOp(op func(ctx context.Context, v Value) error) Process {
+	return func(ctx context.Context, imms []Value) error {
+		var v Value
 		var err error
 		if len(imms) > 0 {
 			v = imms[0]
@@ -501,7 +501,7 @@ func loadStoreOp(op func(ctx context.Context, v interface{}) error) Process {
 	}
 }
 
-func inc(ctx context.Context, v interface{}) error {
+func inc(ctx context.Context, v Value) error {
 	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
@@ -509,7 +509,7 @@ func inc(ctx context.Context, v interface{}) error {
 	return nil
 }
 
-func incl(ctx context.Context, v interface{}) error {
+func incl(ctx context.Context, v Value) error {
 	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err
@@ -521,7 +521,7 @@ func incl(ctx context.Context, v interface{}) error {
 	return nil
 }
 
-func dec(ctx context.Context, v interface{}) error {
+func dec(ctx context.Context, v Value) error {
 	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
@@ -529,7 +529,7 @@ func dec(ctx context.Context, v interface{}) error {
 	return nil
 }
 
-func decl(ctx context.Context, v interface{}) error {
+func decl(ctx context.Context, v Value) error {
 	lh, err := GetLocalHeap(ctx)
 	if err != nil {
 		return err

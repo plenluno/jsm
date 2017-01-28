@@ -6,48 +6,48 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Stack is a stack of interface{}.
+// Stack is a stack of Value’s.
 type Stack interface {
 	Clearable
 	Restorable
 
 	// Push pushes a value onto the stack.
-	Push(v interface{})
+	Push(v Value)
 
 	// MultiPush pushes multiple values onto the stack.
-	MultiPush(vs []interface{})
+	MultiPush(vs []Value)
 
 	// Pop pops a value from the stack.
-	Pop() (interface{}, error)
+	Pop() (Value, error)
 
 	// MultiPop pops multiple values from the stack.
 	// The return slice can be modified by Push/MultiPush.
 	// So you should read the slice before calling Push/MultiPush.
-	MultiPop(n int) ([]interface{}, error)
+	MultiPop(n int) ([]Value, error)
 
 	// Peek returns the value at the top of the stack.
-	Peek() (interface{}, error)
+	Peek() (Value, error)
 
 	// Do executes the given operation against the values at the top of the stack.
-	Do(op func([]interface{}) (interface{}, error), arity int) error
+	Do(op func([]Value) (Value, error), arity int) error
 }
 
-type stack []interface{}
+type stack []Value
 
 func newStack() *stack {
 	s := make(stack, 0, 10)
 	return &s
 }
 
-func (s *stack) Push(v interface{}) {
+func (s *stack) Push(v Value) {
 	*s = append(*s, v)
 }
 
-func (s *stack) MultiPush(vs []interface{}) {
+func (s *stack) MultiPush(vs []Value) {
 	*s = append(*s, vs...)
 }
 
-func (s *stack) Pop() (interface{}, error) {
+func (s *stack) Pop() (Value, error) {
 	l := len(*s)
 	if l == 0 {
 		return nil, errors.New("empty stack")
@@ -58,7 +58,7 @@ func (s *stack) Pop() (interface{}, error) {
 	return v, nil
 }
 
-func (s *stack) MultiPop(n int) ([]interface{}, error) {
+func (s *stack) MultiPop(n int) ([]Value, error) {
 	l := len(*s)
 	if l < n {
 		return nil, errors.New("too few elements")
@@ -69,7 +69,7 @@ func (s *stack) MultiPop(n int) ([]interface{}, error) {
 	return vs, nil
 }
 
-func (s *stack) Peek() (interface{}, error) {
+func (s *stack) Peek() (Value, error) {
 	l := len(*s)
 	if l == 0 {
 		return nil, errors.New("empty stack")
@@ -78,7 +78,7 @@ func (s *stack) Peek() (interface{}, error) {
 	return (*s)[l-1], nil
 }
 
-func (s *stack) Do(op func([]interface{}) (interface{}, error), arity int) error {
+func (s *stack) Do(op func([]Value) (Value, error), arity int) error {
 	l := len(*s)
 	if l < arity {
 		return errors.New("too few elements")

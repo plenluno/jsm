@@ -1,10 +1,10 @@
 package jsm
 
 type frame struct {
-	Arguments []interface{} `json:"arguments"`
-	Locals    *heap         `json:"locals"`
-	Operands  *stack        `json:"operands"`
-	ReturnTo  int           `json:"returnTo"`
+	Arguments []Value `json:"arguments"`
+	Locals    *heap   `json:"locals"`
+	Operands  *stack  `json:"operands"`
+	ReturnTo  int     `json:"returnTo"`
 }
 
 func newFrame() *frame {

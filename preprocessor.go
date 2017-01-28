@@ -8,7 +8,7 @@ import (
 )
 
 // Preprocess preprocesses the immediates of an instruction.
-type Preprocess func(ctx context.Context, imms []interface{}) ([]interface{}, error)
+type Preprocess func(ctx context.Context, imms []Value) ([]Value, error)
 
 type preprocessor map[Mnemonic]Preprocess
 
@@ -97,18 +97,18 @@ func (pp preprocessor) preprocess(program []Instruction) ([]Instruction, error) 
 	return preprocessed, nil
 }
 
-func noPreprocessing(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func noPreprocessing(ctx context.Context, imms []Value) ([]Value, error) {
 	return imms, nil
 }
 
-func noImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func noImmediate(ctx context.Context, imms []Value) ([]Value, error) {
 	if len(imms) > 0 {
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 	return nil, nil
 }
 
-func atMostOneImmediate(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func atMostOneImmediate(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, nil
@@ -119,77 +119,77 @@ func atMostOneImmediate(ctx context.Context, imms []interface{}) ([]interface{},
 	}
 }
 
-func atMostOneInteger(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func atMostOneInteger(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []interface{}{ToInteger(imms[0])}, nil
+		return []Value{ToInteger(imms[0])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func atMostOneNumber(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func atMostOneNumber(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []interface{}{ToNumber(imms[0])}, nil
+		return []Value{ToNumber(imms[0])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func atMostOneString(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func atMostOneString(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []interface{}{ToString(imms[0])}, nil
+		return []Value{ToString(imms[0])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func oneAddress(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func oneAddress(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, preprocessingError(ctx, imms, "no immediate")
 	case 1:
-		return []interface{}{toAddress(ctx, imms[0])}, nil
+		return []Value{toAddress(ctx, imms[0])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func immediatesOfCall(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func immediatesOfCall(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, preprocessingError(ctx, imms, "no immediate")
 	case 1:
-		return []interface{}{toAddress(ctx, imms[0])}, nil
+		return []Value{toAddress(ctx, imms[0])}, nil
 	case 2:
-		return []interface{}{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+		return []Value{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func immediatesOfStore(ctx context.Context, imms []interface{}) ([]interface{}, error) {
+func immediatesOfStore(ctx context.Context, imms []Value) ([]Value, error) {
 	switch len(imms) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []interface{}{ToString(imms[0])}, nil
+		return []Value{ToString(imms[0])}, nil
 	case 2:
-		return []interface{}{ToString(imms[0]), imms[1]}, nil
+		return []Value{ToString(imms[0]), imms[1]}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
 }
 
-func toAddress(ctx context.Context, v interface{}) interface{} {
+func toAddress(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case string:
 		return GetLabels(ctx)[v.(string)]
@@ -198,7 +198,7 @@ func toAddress(ctx context.Context, v interface{}) interface{} {
 	}
 }
 
-func preprocessingError(ctx context.Context, imms []interface{}, msg string) error {
+func preprocessingError(ctx context.Context, imms []Value, msg string) error {
 	data, err := json.Marshal(Instruction{
 		Mnemonic:   GetMnemonic(ctx),
 		Immediates: imms,

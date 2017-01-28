@@ -12,7 +12,7 @@ type Machine interface {
 	Clearable
 	Restorable
 
-	Run(program []Instruction, args []interface{}) (interface{}, error)
+	Run(program []Instruction, args []Value) (Value, error)
 
 	Extend(mnemonic Mnemonic, process Process, preprocess Preprocess) error
 }
@@ -45,7 +45,7 @@ func newMachine() *machine {
 	return m
 }
 
-func (m *machine) Run(program []Instruction, args []interface{}) (interface{}, error) {
+func (m *machine) Run(program []Instruction, args []Value) (Value, error) {
 	if err := m.load(program, args); err != nil {
 		return nil, err
 	}
@@ -59,14 +59,14 @@ func (m *machine) Run(program []Instruction, args []interface{}) (interface{}, e
 	return getResult(m.context), nil
 }
 
-func (m *machine) load(program []Instruction, args []interface{}) error {
+func (m *machine) load(program []Instruction, args []Value) error {
 	p, err := m.preprocessor.preprocess(program)
 	if err != nil {
 		return err
 	}
 
 	if args == nil {
-		args = []interface{}{}
+		args = []Value{}
 	}
 
 	m.Clear()

@@ -20,13 +20,13 @@ func TestMachineRunFib(t *testing.T) {
 	assert.NoError(err)
 
 	m := NewMachine()
-	res, err := m.Run(p, []interface{}{1.0})
+	res, err := m.Run(p, []Value{1.0})
 	assert.NoError(err)
-	assert.Equal([]interface{}{1.0}, res)
+	assert.Equal([]Value{1.0}, res)
 
-	res, err = m.Run(p, []interface{}{6.0})
+	res, err = m.Run(p, []Value{6.0})
 	assert.NoError(err)
-	assert.Equal([]interface{}{13.0}, res)
+	assert.Equal([]Value{13.0}, res)
 }
 
 func TestMachineRunSum(t *testing.T) {
@@ -40,13 +40,13 @@ func TestMachineRunSum(t *testing.T) {
 	assert.NoError(err)
 
 	m := NewMachine()
-	res, err := m.Run(p, []interface{}{0.0})
+	res, err := m.Run(p, []Value{0.0})
 	assert.NoError(err)
-	assert.Equal([]interface{}{0.0}, res)
+	assert.Equal([]Value{0.0}, res)
 
-	res, err = m.Run(p, []interface{}{10.0})
+	res, err = m.Run(p, []Value{10.0})
 	assert.NoError(err)
-	assert.Equal([]interface{}{55.0}, res)
+	assert.Equal([]Value{55.0}, res)
 }
 
 func fibonacci(n int) int {
@@ -56,7 +56,7 @@ func fibonacci(n int) int {
 	return fibonacci(n-1) + fibonacci(n-2)
 }
 
-func fib(ctx context.Context, imms []interface{}) error {
+func fib(ctx context.Context, imms []Value) error {
 	v, err := doPop(ctx)
 	if err != nil {
 		return err
@@ -78,13 +78,13 @@ func TestMachineExtendFib(t *testing.T) {
 	assert.NoError(err)
 
 	p := []Instruction{
-		{Mnemonic: MnemonicLoadArgument, Immediates: []interface{}{0}},
+		{Mnemonic: MnemonicLoadArgument, Immediates: []Value{0}},
 		{Mnemonic: "fib"},
-		{Mnemonic: MnemonicReturn, Immediates: []interface{}{1}},
+		{Mnemonic: MnemonicReturn, Immediates: []Value{1}},
 	}
-	res, err := m.Run(p, []interface{}{6})
+	res, err := m.Run(p, []Value{6})
 	assert.NoError(err)
-	assert.Equal([]interface{}{13}, res)
+	assert.Equal([]Value{13}, res)
 }
 
 func sumOfSeries(n int) int {
@@ -95,7 +95,7 @@ func sumOfSeries(n int) int {
 	return sum
 }
 
-func sum(ctx context.Context, imms []interface{}) error {
+func sum(ctx context.Context, imms []Value) error {
 	v, err := doPop(ctx)
 	if err != nil {
 		return err
@@ -117,13 +117,13 @@ func TestMachineExtendSum(t *testing.T) {
 	assert.NoError(err)
 
 	p := []Instruction{
-		{Mnemonic: MnemonicLoadArgument, Immediates: []interface{}{0}},
+		{Mnemonic: MnemonicLoadArgument, Immediates: []Value{0}},
 		{Mnemonic: "sum"},
-		{Mnemonic: MnemonicReturn, Immediates: []interface{}{1}},
+		{Mnemonic: MnemonicReturn, Immediates: []Value{1}},
 	}
-	res, err := m.Run(p, []interface{}{10})
+	res, err := m.Run(p, []Value{10})
 	assert.NoError(err)
-	assert.Equal([]interface{}{55}, res)
+	assert.Equal([]Value{55}, res)
 }
 
 func BenchmarkFibJSM(b *testing.B) {
@@ -135,7 +135,7 @@ func BenchmarkFibJSM(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		m.Run(p, []interface{}{20.0})
+		m.Run(p, []Value{20.0})
 	}
 }
 
@@ -144,14 +144,14 @@ func BenchmarkFibNative(b *testing.B) {
 	m.Extend("fib", fib, nil)
 
 	p := []Instruction{
-		{Mnemonic: MnemonicLoadArgument, Immediates: []interface{}{0}},
+		{Mnemonic: MnemonicLoadArgument, Immediates: []Value{0}},
 		{Mnemonic: "fib"},
-		{Mnemonic: MnemonicReturn, Immediates: []interface{}{1}},
+		{Mnemonic: MnemonicReturn, Immediates: []Value{1}},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		m.Run(p, []interface{}{20})
+		m.Run(p, []Value{20})
 	}
 }
 
@@ -164,7 +164,7 @@ func BenchmarkSumJSM(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		m.Run(p, []interface{}{100000.0})
+		m.Run(p, []Value{100000.0})
 	}
 }
 
@@ -173,13 +173,13 @@ func BenchmarkSumNative(b *testing.B) {
 	m.Extend("sum", sum, nil)
 
 	p := []Instruction{
-		{Mnemonic: MnemonicLoadArgument, Immediates: []interface{}{0}},
+		{Mnemonic: MnemonicLoadArgument, Immediates: []Value{0}},
 		{Mnemonic: "sum"},
-		{Mnemonic: MnemonicReturn, Immediates: []interface{}{1}},
+		{Mnemonic: MnemonicReturn, Immediates: []Value{1}},
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		m.Run(p, []interface{}{100000})
+		m.Run(p, []Value{100000})
 	}
 }

@@ -8,12 +8,14 @@ import (
 	"strings"
 )
 
-var trueValue interface{} = true
-var falseValue interface{} = false
+type Value interface{}
 
-// BooleanValue converts bool to interface{}.
+var trueValue Value = true
+var falseValue Value = false
+
+// BooleanValue converts bool to Value.
 // It returns an already allocated boolean value and avoids new memory allocation.
-func BooleanValue(b bool) interface{} {
+func BooleanValue(b bool) Value {
 	if b {
 		return trueValue
 	}
@@ -21,7 +23,7 @@ func BooleanValue(b bool) interface{} {
 }
 
 // ToBoolean converts the given value to a boolean.
-func ToBoolean(v interface{}) bool {
+func ToBoolean(v Value) bool {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.Invalid:
@@ -45,7 +47,7 @@ func ToBoolean(v interface{}) bool {
 }
 
 // ToNumber converts the given value to a floating point number.
-func ToNumber(v interface{}) float64 {
+func ToNumber(v Value) float64 {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.Invalid:
@@ -78,7 +80,7 @@ func ToNumber(v interface{}) float64 {
 }
 
 // ToInteger converts the given value to an integer.
-func ToInteger(v interface{}) int {
+func ToInteger(v Value) int {
 	f := ToNumber(v)
 	if math.IsNaN(f) {
 		return 0
@@ -94,7 +96,7 @@ func ToInteger(v interface{}) int {
 }
 
 // ToString converts the given value to a string.
-func ToString(v interface{}) string {
+func ToString(v Value) string {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.String:
@@ -120,12 +122,12 @@ func ToString(v interface{}) string {
 }
 
 // Equal checks if the given two values are equivalent.
-func Equal(v1, v2 interface{}) bool {
+func Equal(v1, v2 Value) bool {
 	return reflect.DeepEqual(normalize(v1), normalize(v2))
 }
 
 // Less checks if v1 is less than v2.
-func Less(v1, v2 interface{}) bool {
+func Less(v1, v2 Value) bool {
 	val1 := reflect.ValueOf(normalize(v1))
 	val2 := reflect.ValueOf(normalize(v2))
 	kind1 := val1.Kind()
@@ -183,7 +185,7 @@ func Less(v1, v2 interface{}) bool {
 
 const maxSafeInteger = 1<<53 - 1
 
-func normalize(v interface{}) interface{} {
+func normalize(v Value) Value {
 	val := reflect.ValueOf(v)
 	kind := val.Kind()
 	switch kind {
@@ -215,7 +217,7 @@ func normalize(v interface{}) interface{} {
 		}
 
 		n := val.Len()
-		a := make([]interface{}, n)
+		a := make([]Value, n)
 		for i := 0; i < n; i++ {
 			a[i] = normalize(val.Index(i).Interface())
 		}
@@ -225,7 +227,7 @@ func normalize(v interface{}) interface{} {
 			return nil
 		}
 
-		m := map[string]interface{}{}
+		m := map[string]Value{}
 		for _, key := range val.MapKeys() {
 			m[ToString(key.Interface())] = normalize(val.MapIndex(key).Interface())
 		}
