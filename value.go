@@ -8,18 +8,50 @@ import (
 	"strings"
 )
 
+// Value represents any type of JSON value.
 type Value interface{}
+
+// NullValue returns the null Value.
+func NullValue() Value {
+	return nil
+}
 
 var trueValue Value = true
 var falseValue Value = false
 
-// BooleanValue converts bool to Value.
-// It returns an already allocated boolean value and avoids new memory allocation.
+// BooleanValue returns the boolean Value representing the specified bool.
 func BooleanValue(b bool) Value {
+	// return an already allocated boolean value
+	// and avoids new memory allocation
 	if b {
 		return trueValue
 	}
 	return falseValue
+}
+
+// IntegerValue returns the integer Value representing the specified int.
+func IntegerValue(i int) Value {
+	return i
+}
+
+// NumberValue returns the number Value representing the specified float64.
+func NumberValue(f float64) Value {
+	return f
+}
+
+// StringValue returns the string Value representing the specified string.
+func StringValue(s string) Value {
+	return s
+}
+
+// ArrayValue returns the array Value representing the specified slice.
+func ArrayValue(a []Value) Value {
+	return a
+}
+
+// ObjectValue returns the object Value representing the specified map.
+func ObjectValue(o map[string]Value) Value {
+	return o
 }
 
 // ToBoolean converts the given value to a boolean.
@@ -44,6 +76,22 @@ func ToBoolean(v Value) bool {
 	default:
 		return true
 	}
+}
+
+// ToInteger converts the given value to an integer.
+func ToInteger(v Value) int {
+	f := ToNumber(v)
+	if math.IsNaN(f) {
+		return 0
+	}
+
+	var sign float64
+	if math.Signbit(f) {
+		sign = -1.0
+	} else {
+		sign = 1.0
+	}
+	return int(sign * math.Floor(math.Abs(f)))
 }
 
 // ToNumber converts the given value to a floating point number.
@@ -77,22 +125,6 @@ func ToNumber(v Value) float64 {
 	default:
 		return math.NaN()
 	}
-}
-
-// ToInteger converts the given value to an integer.
-func ToInteger(v Value) int {
-	f := ToNumber(v)
-	if math.IsNaN(f) {
-		return 0
-	}
-
-	var sign float64
-	if math.Signbit(f) {
-		sign = -1.0
-	} else {
-		sign = 1.0
-	}
-	return int(sign * math.Floor(math.Abs(f)))
 }
 
 // ToString converts the given value to a string.

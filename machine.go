@@ -47,12 +47,12 @@ func newMachine() *machine {
 
 func (m *machine) Run(program []Instruction, args []Value) (Value, error) {
 	if err := m.load(program, args); err != nil {
-		return nil, err
+		return NullValue(), err
 	}
 
 	for m.inProgress() {
 		if err := m.step(); err != nil {
-			return nil, err
+			return NullValue(), err
 		}
 	}
 

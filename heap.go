@@ -28,7 +28,7 @@ func newHeap() *heap {
 func (h *heap) Load(k string) (Value, error) {
 	v, ok := (*h)[k]
 	if !ok {
-		return nil, errors.New("not found")
+		return NullValue(), errors.New("not found")
 	}
 	return v, nil
 }

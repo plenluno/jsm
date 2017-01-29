@@ -64,7 +64,7 @@ func TestStackDumpRestore(t *testing.T) {
 	assert := assert.New(t)
 
 	s1 := newStack()
-	s1.Push("abc")
+	s1.Push(StringValue("abc"))
 	s1.Push(123)
 	d1, err := s1.Dump()
 	assert.NoError(err)

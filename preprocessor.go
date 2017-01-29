@@ -124,7 +124,7 @@ func atMostOneInteger(ctx context.Context, imms []Value) ([]Value, error) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []Value{ToInteger(imms[0])}, nil
+		return []Value{IntegerValue(ToInteger(imms[0]))}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
@@ -135,7 +135,7 @@ func atMostOneNumber(ctx context.Context, imms []Value) ([]Value, error) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []Value{ToNumber(imms[0])}, nil
+		return []Value{NumberValue(ToNumber(imms[0]))}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
@@ -146,7 +146,7 @@ func atMostOneString(ctx context.Context, imms []Value) ([]Value, error) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []Value{ToString(imms[0])}, nil
+		return []Value{StringValue(ToString(imms[0]))}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
@@ -170,7 +170,7 @@ func immediatesOfCall(ctx context.Context, imms []Value) ([]Value, error) {
 	case 1:
 		return []Value{toAddress(ctx, imms[0])}, nil
 	case 2:
-		return []Value{toAddress(ctx, imms[0]), ToInteger(imms[1])}, nil
+		return []Value{toAddress(ctx, imms[0]), IntegerValue(ToInteger(imms[1]))}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
@@ -181,9 +181,9 @@ func immediatesOfStore(ctx context.Context, imms []Value) ([]Value, error) {
 	case 0:
 		return nil, nil
 	case 1:
-		return []Value{ToString(imms[0])}, nil
+		return []Value{StringValue(ToString(imms[0]))}, nil
 	case 2:
-		return []Value{ToString(imms[0]), imms[1]}, nil
+		return []Value{StringValue(ToString(imms[0])), imms[1]}, nil
 	default:
 		return nil, preprocessingError(ctx, imms, "too many immediates")
 	}
@@ -192,9 +192,9 @@ func immediatesOfStore(ctx context.Context, imms []Value) ([]Value, error) {
 func toAddress(ctx context.Context, v Value) Value {
 	switch v.(type) {
 	case string:
-		return GetLabels(ctx)[v.(string)]
+		return IntegerValue(GetLabels(ctx)[ToString(v)])
 	default:
-		return ToInteger(v)
+		return IntegerValue(ToInteger(v))
 	}
 }
 

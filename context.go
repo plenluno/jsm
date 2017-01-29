@@ -75,11 +75,11 @@ func getFrame(ctx context.Context) (*frame, error) {
 func GetArgument(ctx context.Context, idx int) (Value, error) {
 	f, err := getFrame(ctx)
 	if err != nil {
-		return nil, err
+		return NullValue(), err
 	}
 
 	if idx >= len(f.Arguments) {
-		return nil, errors.New("argument out of range")
+		return NullValue(), errors.New("argument out of range")
 	}
 
 	return f.Arguments[idx], nil

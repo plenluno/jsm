@@ -50,7 +50,7 @@ func (s *stack) MultiPush(vs []Value) {
 func (s *stack) Pop() (Value, error) {
 	l := len(*s)
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return NullValue(), errors.New("empty stack")
 	}
 
 	v := (*s)[l-1]
@@ -72,7 +72,7 @@ func (s *stack) MultiPop(n int) ([]Value, error) {
 func (s *stack) Peek() (Value, error) {
 	l := len(*s)
 	if l == 0 {
-		return nil, errors.New("empty stack")
+		return NullValue(), errors.New("empty stack")
 	}
 
 	return (*s)[l-1], nil

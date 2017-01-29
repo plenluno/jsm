@@ -14,22 +14,23 @@ func TestHeapLoadStore(t *testing.T) {
 	assert.Error(err)
 	assert.Nil(v)
 
-	h.Store("abc", 123)
+	h.Store("abc", IntegerValue(123))
 	v, err = h.Load("abc")
 	assert.NoError(err)
-	assert.Equal(123, v)
+	assert.Equal(123, ToInteger(v))
 
-	h.Store("abc", "xyz")
+	h.Store("abc", StringValue("xyz"))
 	v, err = h.Load("abc")
 	assert.NoError(err)
-	assert.Equal("xyz", v)
+	assert.Equal("xyz", ToString(v))
 }
 
 func TestHeapClear(t *testing.T) {
 	assert := assert.New(t)
 
 	h := newHeap()
-	h.Store("xyz", []int{1, 2, 3})
+	vs := ArrayValue([]Value{IntegerValue(1), NumberValue(2.0), StringValue("3")})
+	h.Store("xyz", vs)
 	h.Clear()
 	d, err := h.Dump()
 	assert.NoError(err)
@@ -40,10 +41,11 @@ func TestHeapDumpRestore(t *testing.T) {
 	assert := assert.New(t)
 
 	h1 := newHeap()
-	h1.Store("xyz", []int{1, 2, 3})
+	vs := ArrayValue([]Value{IntegerValue(1), NumberValue(2.0), StringValue("3")})
+	h1.Store("xyz", vs)
 	d1, err := h1.Dump()
 	assert.NoError(err)
-	assert.Equal("{\"xyz\":[1,2,3]}", string(d1))
+	assert.Equal("{\"xyz\":[1,2,\"3\"]}", string(d1))
 
 	h2 := newHeap()
 	d2, err := h2.Dump()
@@ -54,7 +56,7 @@ func TestHeapDumpRestore(t *testing.T) {
 	assert.NoError(err)
 	d2, err = h2.Dump()
 	assert.NoError(err)
-	assert.Equal("{\"xyz\":[1,2,3]}", string(d2))
+	assert.Equal("{\"xyz\":[1,2,\"3\"]}", string(d2))
 
 	err = h2.Restore([]byte{})
 	assert.Error(err)

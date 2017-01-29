@@ -14,9 +14,9 @@ func TestMachineContext(t *testing.T) {
 	assert.Equal(mc.Value(keyHeap), GetGlobalHeap(mc))
 	assert.Equal(mc.Value(keyStack), getCallStack(mc))
 
-	setResult(mc, 3)
-	assert.Equal(3, getResult(mc))
-	assert.Equal(3, *mc.Value(keyResult).(*Value))
+	setResult(mc, IntegerValue(3))
+	assert.Equal(3, ToInteger(getResult(mc)))
+	assert.Equal(3, ToInteger(*mc.Value(keyResult).(*Value)))
 }
 
 func TestProgramContext(t *testing.T) {

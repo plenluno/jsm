@@ -107,12 +107,12 @@ func doMultiPush(ctx context.Context, vs []Value) error {
 func doPop(ctx context.Context) (Value, error) {
 	stack, err := GetOperandStack(ctx)
 	if err != nil {
-		return nil, err
+		return NullValue(), err
 	}
 
 	v, err := stack.Pop()
 	if err != nil {
-		return nil, errors.New("no operand")
+		return NullValue(), errors.New("no operand")
 	}
 	return v, nil
 }
@@ -147,8 +147,8 @@ func getAddress(vs []Value, idx int) (int, error) {
 		return -1, errors.New("no address")
 	}
 
-	addr, ok := vs[idx].(int)
-	if !ok || addr < 0 {
+	addr := ToInteger(vs[idx])
+	if addr < 0 {
 		return -1, errors.New("invalid address")
 	}
 
@@ -160,8 +160,8 @@ func getCount(vs []Value, idx, min int) (int, error) {
 		return min, nil
 	}
 
-	count, ok := vs[idx].(int)
-	if !ok || count < min {
+	count := ToInteger(vs[idx])
+	if count < min {
 		return -1, errors.New("invalid count")
 	}
 
@@ -235,7 +235,7 @@ func lda(ctx context.Context, v Value) (Value, error) {
 func ldl(ctx context.Context, v Value) (Value, error) {
 	lh, err := GetLocalHeap(ctx)
 	if err != nil {
-		return nil, err
+		return NullValue(), err
 	}
 
 	v, _ = lh.Load(ToString(v))
@@ -336,7 +336,7 @@ func ret(ctx context.Context, imms []Value) error {
 	}
 
 	if err := doMultiPush(ctx, res); err != nil {
-		setResult(ctx, res)
+		setResult(ctx, ArrayValue(res))
 	}
 	return nil
 }
@@ -454,29 +454,29 @@ func or(vs []Value) (Value, error) {
 }
 
 func neg(vs []Value) (Value, error) {
-	return -ToNumber(vs[0]), nil
+	return NumberValue(-ToNumber(vs[0])), nil
 }
 
 func add(vs []Value) (Value, error) {
-	return ToNumber(vs[0]) + ToNumber(vs[1]), nil
+	return NumberValue(ToNumber(vs[0]) + ToNumber(vs[1])), nil
 }
 
 func sub(vs []Value) (Value, error) {
-	return ToNumber(vs[0]) - ToNumber(vs[1]), nil
+	return NumberValue(ToNumber(vs[0]) - ToNumber(vs[1])), nil
 }
 
 func mul(vs []Value) (Value, error) {
-	return ToNumber(vs[0]) * ToNumber(vs[1]), nil
+	return NumberValue(ToNumber(vs[0]) * ToNumber(vs[1])), nil
 }
 
 func div(vs []Value) (Value, error) {
 	num1 := ToNumber(vs[0])
 	num2 := ToNumber(vs[1])
 	if num2 == 0.0 {
-		return nil, errors.New("divide by zero")
+		return NullValue(), errors.New("divide by zero")
 	}
 
-	return num1 / num2, nil
+	return NumberValue(num1 / num2), nil
 }
 
 func loadStoreOp(op func(ctx context.Context, v Value) error) Process {
@@ -505,7 +505,7 @@ func inc(ctx context.Context, v Value) error {
 	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
-	h.Store(k, ToNumber(v)+1.0)
+	h.Store(k, NumberValue(ToNumber(v)+1.0))
 	return nil
 }
 
@@ -517,7 +517,7 @@ func incl(ctx context.Context, v Value) error {
 
 	k := ToString(v)
 	v, _ = lh.Load(k)
-	lh.Store(k, ToNumber(v)+1.0)
+	lh.Store(k, NumberValue(ToNumber(v)+1.0))
 	return nil
 }
 
@@ -525,7 +525,7 @@ func dec(ctx context.Context, v Value) error {
 	h := GetGlobalHeap(ctx)
 	k := ToString(v)
 	v, _ = h.Load(k)
-	h.Store(k, ToNumber(v)-1.0)
+	h.Store(k, NumberValue(ToNumber(v)-1.0))
 	return nil
 }
 
@@ -537,6 +537,6 @@ func decl(ctx context.Context, v Value) error {
 
 	k := ToString(v)
 	v, _ = lh.Load(k)
-	lh.Store(k, ToNumber(v)-1.0)
+	lh.Store(k, NumberValue(ToNumber(v)-1.0))
 	return nil
 }
