@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-// Value represents any type of JSON value.
+// Value represents a JSON value.
 type Value interface{}
 
-// NullValue returns the null Value.
+// NullValue returns the null value.
 func NullValue() Value {
 	return nil
 }
@@ -19,7 +19,7 @@ func NullValue() Value {
 var trueValue Value = true
 var falseValue Value = false
 
-// BooleanValue returns the boolean Value representing the specified bool.
+// BooleanValue returns the boolean value representing the specified bool.
 func BooleanValue(b bool) Value {
 	// return an already allocated boolean value
 	// and avoids new memory allocation
@@ -29,29 +29,71 @@ func BooleanValue(b bool) Value {
 	return falseValue
 }
 
-// IntegerValue returns the integer Value representing the specified int.
+// IntegerValue returns the integer value representing the specified int.
 func IntegerValue(i int) Value {
 	return i
 }
 
-// NumberValue returns the number Value representing the specified float64.
+// NumberValue returns the number value representing the specified float64.
 func NumberValue(f float64) Value {
 	return f
 }
 
-// StringValue returns the string Value representing the specified string.
+// StringValue returns the string value representing the specified string.
 func StringValue(s string) Value {
 	return s
 }
 
-// ArrayValue returns the array Value representing the specified slice.
+// ArrayValue returns the array value representing the specified slice.
 func ArrayValue(a []Value) Value {
 	return a
 }
 
-// ObjectValue returns the object Value representing the specified map.
+// ObjectValue returns the object value representing the specified map.
 func ObjectValue(o map[string]Value) Value {
 	return o
+}
+
+// Type represents the type of a JSON value.
+type Type int
+
+// These constants are the types of JSON values.
+const (
+	TypeUndefined Type = iota
+	TypeNull
+	TypeBoolean
+	TypeNumber
+	TypeString
+	TypeArray
+	TypeObject
+)
+
+// TypeOf returns the type of the given value.
+func TypeOf(v Value) Type {
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Invalid:
+		return TypeNull
+	case reflect.Bool:
+		return TypeBoolean
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64:
+		return TypeNumber
+	case reflect.String:
+		return TypeString
+	case reflect.Slice:
+		return TypeArray
+	case reflect.Map:
+		return TypeObject
+	case reflect.Ptr:
+		if val.IsNil() {
+			return TypeNull
+		}
+		return TypeUndefined
+	default:
+		return TypeUndefined
+	}
 }
 
 // ToBoolean converts the given value to a boolean.

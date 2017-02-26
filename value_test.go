@@ -7,6 +7,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestType(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.Equal(TypeNull, TypeOf(NullValue()))
+	assert.Equal(TypeBoolean, TypeOf(BooleanValue(false)))
+	assert.Equal(TypeNumber, TypeOf(IntegerValue(123)))
+	assert.Equal(TypeNumber, TypeOf(NumberValue(1.23)))
+	assert.Equal(TypeNumber, TypeOf(NumberValue(math.NaN())))
+	assert.Equal(TypeString, TypeOf(StringValue("abc")))
+	assert.Equal(TypeArray, TypeOf([]Value{IntegerValue(123), StringValue("abc")}))
+	assert.Equal(TypeObject, TypeOf(map[string]Value{"abc": NumberValue(1.23)}))
+}
+
 func TestToBoolean(t *testing.T) {
 	assert := assert.New(t)
 

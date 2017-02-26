@@ -190,8 +190,8 @@ func immediatesOfStore(ctx context.Context, imms []Value) ([]Value, error) {
 }
 
 func toAddress(ctx context.Context, v Value) Value {
-	switch v.(type) {
-	case string:
+	switch TypeOf(v) {
+	case TypeString:
 		return IntegerValue(GetLabels(ctx)[ToString(v)])
 	default:
 		return IntegerValue(ToInteger(v))
