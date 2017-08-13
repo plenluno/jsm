@@ -29,7 +29,7 @@ type machine struct {
 	Program []Instruction   `json:"program"`
 	PC      *programCounter `json:"pc"`
 	Heap    *heap           `json:"heap"`
-	Stack   *stack          `json:"stack"`
+	Stack   *callStack      `json:"stack"`
 
 	context context.Context
 }
@@ -40,7 +40,7 @@ func newMachine() *machine {
 	m.preprocessor = newPreprocessor()
 	m.PC = newProgramCounter()
 	m.Heap = newHeap()
-	m.Stack = newStack()
+	m.Stack = newCallStack()
 	m.context = newMachineContext(m)
 	return m
 }

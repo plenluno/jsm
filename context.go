@@ -58,17 +58,12 @@ func GetGlobalHeap(ctx context.Context) Heap {
 	return (*ctx.(*machineContext))[keyHeap].(*heap)
 }
 
-func getCallStack(ctx context.Context) Stack {
-	return (*ctx.(*machineContext))[keyStack].(*stack)
+func getCallStack(ctx context.Context) *callStack {
+	return (*ctx.(*machineContext))[keyStack].(*callStack)
 }
 
 func getFrame(ctx context.Context) (*frame, error) {
-	stack := getCallStack(ctx)
-	f, err := stack.Peek()
-	if err != nil {
-		return nil, errors.New("no frame")
-	}
-	return f.(*frame), nil
+	return getCallStack(ctx).Peek()
 }
 
 // GetArgument retrieves the argument at the specified position.

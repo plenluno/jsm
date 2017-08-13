@@ -28,3 +28,26 @@ func TestFrame(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(f, &v)
 }
+
+func TestCallStack(t *testing.T) {
+	assert := assert.New(t)
+
+	cs := newCallStack()
+	_, err := cs.Peek()
+	assert.Error(err)
+	_, err = cs.Pop()
+	assert.Error(err)
+
+	f1 := newFrame()
+	cs.Push(f1)
+	f2, err := cs.Pop()
+	assert.NoError(err)
+	assert.Equal(f1, f2)
+	_, err = cs.Pop()
+	assert.Error(err)
+
+	cs.Push(f1)
+	cs.Clear()
+	_, err = cs.Pop()
+	assert.Error(err)
+}
