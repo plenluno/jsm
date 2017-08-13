@@ -11,13 +11,15 @@ func TestType(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Equal(TypeNull, TypeOf(NullValue()))
+	assert.Equal(TypeNull, TypeOf(ArrayValue(nil)))
+	assert.Equal(TypeNull, TypeOf(ObjectValue(nil)))
 	assert.Equal(TypeBoolean, TypeOf(BooleanValue(false)))
 	assert.Equal(TypeNumber, TypeOf(IntegerValue(123)))
 	assert.Equal(TypeNumber, TypeOf(NumberValue(1.23)))
 	assert.Equal(TypeNumber, TypeOf(NumberValue(math.NaN())))
 	assert.Equal(TypeString, TypeOf(StringValue("abc")))
-	assert.Equal(TypeArray, TypeOf([]Value{IntegerValue(123), StringValue("abc")}))
-	assert.Equal(TypeObject, TypeOf(map[string]Value{"abc": NumberValue(1.23)}))
+	assert.Equal(TypeArray, TypeOf(ArrayValue([]Value{IntegerValue(123), StringValue("abc")})))
+	assert.Equal(TypeObject, TypeOf(ObjectValue(map[string]Value{"abc": NumberValue(1.23)})))
 }
 
 func TestToBoolean(t *testing.T) {
@@ -33,12 +35,14 @@ func TestToBoolean(t *testing.T) {
 	var m map[int]int
 	var sl []int
 
-	assert.False(ToBoolean(nil))
-	assert.False(ToBoolean(false))
-	assert.False(ToBoolean(0))
-	assert.False(ToBoolean(0.0))
-	assert.False(ToBoolean(math.NaN()))
-	assert.False(ToBoolean(""))
+	assert.False(ToBoolean(NullValue()))
+	assert.False(ToBoolean(ArrayValue(nil)))
+	assert.False(ToBoolean(ObjectValue(nil)))
+	assert.False(ToBoolean(BooleanValue(false)))
+	assert.False(ToBoolean(IntegerValue(0)))
+	assert.False(ToBoolean(NumberValue(0.0)))
+	assert.False(ToBoolean(NumberValue(math.NaN())))
+	assert.False(ToBoolean(StringValue("")))
 	assert.False(ToBoolean(p))
 	assert.False(ToBoolean(sp))
 	assert.False(ToBoolean(m))

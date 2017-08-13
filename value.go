@@ -83,8 +83,14 @@ func TypeOf(v Value) Type {
 	case reflect.String:
 		return TypeString
 	case reflect.Slice:
+		if val.IsNil() {
+			return TypeNull
+		}
 		return TypeArray
 	case reflect.Map:
+		if val.IsNil() {
+			return TypeNull
+		}
 		return TypeObject
 	case reflect.Ptr:
 		if val.IsNil() {
