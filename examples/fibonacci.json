@@ -7,7 +7,7 @@
     "immediates": [2]
 }, {
     "mnemonic": "jt",
-    "immediates": ["ret1"]
+    "immediates": ["init"]
 }, {
     "mnemonic": "lda",
     "immediates": [0]
@@ -32,9 +32,9 @@
     "mnemonic": "ret",
     "immediates": [1]
 }, {
-    "label": "ret1",
-    "mnemonic": "push",
-    "immediates": [1]
+    "label": "init",
+    "mnemonic": "lda",
+    "immediates": [0]
 }, {
     "mnemonic": "ret",
     "immediates": [1]

@@ -51,7 +51,7 @@ func TestMachineRunSum(t *testing.T) {
 
 func fibonacci(n int) int {
 	if n < 2 {
-		return 1
+		return n
 	}
 	return fibonacci(n-1) + fibonacci(n-2)
 }
@@ -82,7 +82,7 @@ func TestMachineExtendFib(t *testing.T) {
 		{Mnemonic: "fib"},
 		{Mnemonic: MnemonicReturn, Immediates: []Value{IntegerValue(1)}},
 	}
-	res, err := m.Run(p, []Value{IntegerValue(6)})
+	res, err := m.Run(p, []Value{IntegerValue(7)})
 	assert.NoError(err)
 	assert.Equal([]Value{IntegerValue(13)}, res)
 }
