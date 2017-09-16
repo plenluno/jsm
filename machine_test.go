@@ -24,7 +24,7 @@ func TestMachineRunFib(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal([]Value{NumberValue(1.0)}, res)
 
-	res, err = m.Run(p, []Value{NumberValue(6.0)})
+	res, err = m.Run(p, []Value{NumberValue(7.0)})
 	assert.NoError(err)
 	assert.Equal([]Value{NumberValue(13.0)}, res)
 }
@@ -62,7 +62,7 @@ func fib(ctx context.Context, imms []Value) error {
 		return err
 	}
 
-	if err := doPush(ctx, fibonacci(ToInteger(v))); err != nil {
+	if err := doPush(ctx, IntegerValue(fibonacci(ToInteger(v)))); err != nil {
 		return err
 	}
 
@@ -101,7 +101,7 @@ func sum(ctx context.Context, imms []Value) error {
 		return err
 	}
 
-	if err := doPush(ctx, sumOfSeries(ToInteger(v))); err != nil {
+	if err := doPush(ctx, IntegerValue(sumOfSeries(ToInteger(v)))); err != nil {
 		return err
 	}
 

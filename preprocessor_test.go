@@ -13,51 +13,51 @@ func TestPreprocess(t *testing.T) {
 	p1 := []Instruction{
 		{
 			Mnemonic:   MnemonicPush,
-			Immediates: []Value{3, 4.5},
+			Immediates: []Value{IntegerValue(3), NumberValue(4.5)},
 		},
 		{
 			Mnemonic:   MnemonicPop,
-			Immediates: []Value{"1.1"},
+			Immediates: []Value{StringValue("1.1")},
 		},
 		{
 			Mnemonic:   MnemonicCall,
-			Immediates: []Value{"abc", 1.1},
+			Immediates: []Value{StringValue("abc"), NumberValue(1.1)},
 		},
 		{
 			Label:      "abc",
 			Mnemonic:   MnemonicReturn,
-			Immediates: []Value{2.2},
+			Immediates: []Value{NumberValue(2.2)},
 		},
 		{
 			Mnemonic:   MnemonicJump,
-			Immediates: []Value{"abc"},
+			Immediates: []Value{StringValue("abc")},
 			Comment:    "jump",
 		},
 	}
 	p2 := []Instruction{
 		{
 			Mnemonic:   MnemonicPush,
-			Immediates: []Value{3, 4.5},
+			Immediates: []Value{IntegerValue(3), NumberValue(4.5)},
 			opcode:     opcode(MnemonicPush),
 		},
 		{
 			Mnemonic:   MnemonicPop,
-			Immediates: []Value{1},
+			Immediates: []Value{IntegerValue(1)},
 			opcode:     opcode(MnemonicPop),
 		},
 		{
 			Mnemonic:   MnemonicCall,
-			Immediates: []Value{3, 1},
+			Immediates: []Value{IntegerValue(3), IntegerValue(1)},
 			opcode:     opcode(MnemonicCall),
 		},
 		{
 			Mnemonic:   MnemonicReturn,
-			Immediates: []Value{2},
+			Immediates: []Value{IntegerValue(2)},
 			opcode:     opcode(MnemonicReturn),
 		},
 		{
 			Mnemonic:   MnemonicJump,
-			Immediates: []Value{3},
+			Immediates: []Value{IntegerValue(3)},
 			opcode:     opcode(MnemonicJump),
 		},
 	}

@@ -13,16 +13,16 @@ func TestStackPushPop(t *testing.T) {
 	_, err := s.Pop()
 	assert.Error(err)
 
-	s.Push("abc")
-	s.Push(123)
+	s.Push(StringValue("abc"))
+	s.Push(IntegerValue(123))
 
 	v, err := s.Pop()
 	assert.NoError(err)
-	assert.Equal(123, v)
+	assert.Equal(123, ToInteger(v))
 
 	v, err = s.Pop()
 	assert.NoError(err)
-	assert.Equal("abc", v)
+	assert.Equal("abc", ToString(v))
 
 	_, err = s.Pop()
 	assert.Error(err)
@@ -32,12 +32,12 @@ func TestStackDo(t *testing.T) {
 	assert := assert.New(t)
 
 	s := newStack()
-	s.Push(12)
-	s.Push(3)
+	s.Push(IntegerValue(12))
+	s.Push(IntegerValue(3))
 	s.Do(div, 2)
 	v, err := s.Pop()
 	assert.NoError(err)
-	assert.Equal(4.0, v)
+	assert.Equal(4.0, ToNumber(v))
 
 	_, err = s.Pop()
 	assert.Error(err)
@@ -47,13 +47,13 @@ func TestStackPeekClear(t *testing.T) {
 	assert := assert.New(t)
 
 	s := newStack()
-	s.Push("abc")
+	s.Push(StringValue("abc"))
 	v, err := s.Peek()
 	assert.NoError(err)
-	assert.Equal("abc", v)
+	assert.Equal("abc", ToString(v))
 	v, err = s.Peek()
 	assert.NoError(err)
-	assert.Equal("abc", v)
+	assert.Equal("abc", ToString(v))
 
 	s.Clear()
 	_, err = s.Peek()
@@ -65,7 +65,7 @@ func TestStackDumpRestore(t *testing.T) {
 
 	s1 := newStack()
 	s1.Push(StringValue("abc"))
-	s1.Push(123)
+	s1.Push(IntegerValue(123))
 	d1, err := s1.Dump()
 	assert.NoError(err)
 	assert.Equal("[\"abc\",123]", string(d1))
