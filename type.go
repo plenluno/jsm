@@ -12,4 +12,8 @@ const (
 	TypeString
 	TypeArray
 	TypeObject
+
+	// TypePointer is a special type that represents a pointer to an arbitrary type,
+	// but is always marshaled as 'null' in JSON.
+	TypePointer
 )

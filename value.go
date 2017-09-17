@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 // Value represents a JSON value.
@@ -54,6 +55,14 @@ func ObjectValue(o map[string]Value) Value {
 	return o
 }
 
+// PointerValue returns the pointer value representing the specified unsafe.Pointer.
+func PointerValue(p unsafe.Pointer) Value {
+	if p == nil {
+		return NullValue()
+	}
+	return &pointer{Pointer: p}
+}
+
 // TypeOf returns the type of the given value.
 func TypeOf(v Value) Type {
 	val := reflect.ValueOf(v)
@@ -82,7 +91,7 @@ func TypeOf(v Value) Type {
 		if val.IsNil() {
 			return TypeNull
 		}
-		return TypeUndefined
+		return TypePointer
 	default:
 		return TypeUndefined
 	}
@@ -185,6 +194,14 @@ func ToString(v Value) string {
 		}
 		return string(data)
 	}
+}
+
+// ToPointer converts the given value to a pointer.
+func ToPointer(v Value) unsafe.Pointer {
+	if p, ok := v.(*pointer); ok && p != nil {
+		return p.Pointer
+	}
+	return unsafe.Pointer(nil)
 }
 
 // Equal checks if the given two values are equivalent.
@@ -306,4 +323,12 @@ func normalize(v Value) Value {
 	default:
 		return v
 	}
+}
+
+type pointer struct {
+	Pointer unsafe.Pointer
+}
+
+func (p *pointer) MarshalJSON() ([]byte, error) {
+	return []byte("null"), nil
 }
