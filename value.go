@@ -22,8 +22,7 @@ var falseValue Value = false
 
 // BooleanValue returns the boolean value representing the specified bool.
 func BooleanValue(b bool) Value {
-	// return an already allocated boolean value
-	// and avoids new memory allocation
+	// return an already allocated boolean value to avoid new memory allocation
 	if b {
 		return trueValue
 	}
@@ -123,18 +122,28 @@ func ToBoolean(v Value) bool {
 
 // ToInteger converts the given value to an integer.
 func ToInteger(v Value) int {
-	f := ToNumber(v)
-	if math.IsNaN(f) {
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Bool:
+		if val.Bool() {
+			return 1
+		}
+		return 0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int(val.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return int(val.Uint())
+	case reflect.Float32, reflect.Float64:
+		return floatToInt(val.Float())
+	case reflect.String:
+		f, err := strconv.ParseFloat(val.String(), 64)
+		if err != nil {
+			return 0
+		}
+		return floatToInt(f)
+	default:
 		return 0
 	}
-
-	var sign float64
-	if math.Signbit(f) {
-		sign = -1.0
-	} else {
-		sign = 1.0
-	}
-	return int(sign * math.Floor(math.Abs(f)))
 }
 
 // ToNumber converts the given value to a floating point number.
@@ -174,6 +183,8 @@ func ToNumber(v Value) float64 {
 func ToString(v Value) string {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
+	case reflect.Float32, reflect.Float64:
+		return floatToString(val.Float())
 	case reflect.String:
 		return val.String()
 	case reflect.Slice:
